@@ -1,0 +1,18 @@
+body, html {
+  margin: 0;
+  padding: 0;
+  background: #eef;
+  overflow: hidden; }
+
+.ui {
+  position: relative;
+  width: 100%;
+  height: 100%; }
+  .ui iframe {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    border: none; }
+
+/*# sourceMappingURL=styles.css.map */

@@ -1,0 +1,102 @@
+name: sigmatau-ship
+version: 0.1.0
+synopsis: Game
+description: "Spaceship Bridge Simulator"
+maintainer: Jonathan Levi <JonathanILevi@gmail.com>
+category: Game
+##  - CHANGELOG.md
+
+# To remove tab warning
+ghc-options: "-w -Woverlapping-patterns -Wwarnings-deprecations -Wdeprecations -Wdeprecated-flags -Wunrecognised-pragmas -Wredundant-constraints -Wduplicate-exports -Woverflowed-literals -Wempty-enumerations -Wmissing-fields -Wmissing-methods -Wwrong-do-bind -Wunsupported-calling-conventions -Wdodgy-foreign-imports -Winline-rule-shadowing -Wunsupported-llvm-version -Wunrecognised-warning-flags -Winaccessible-code -Wstar-is-type -Wstar-binder"
+
+dependencies:
+  - base >=4.12 && <5
+
+internal-libraries:
+  #---General
+  lifetime:
+    source-dirs: src-general/lifetime
+    exposed-modules:
+      - Data.Lifetime
+    dependencies: []
+  lifetime-set:
+    source-dirs: src-general/lifetime-set
+    exposed-modules:
+      - Data.Lifetime.Set
+    dependencies:
+      - lifetime
+  #---Network
+  terminal-connection:
+    source-dirs: src-network/terminal-connection
+    exposed-modules:
+      - Network.TerminalConnection
+    dependencies:
+      - stm
+      - msg
+  msg:
+    source-dirs: src-network/msg
+    exposed-modules:
+      - Data.Msg.Up
+    dependencies:
+      - flatbuffers
+  terminal-web-server:
+    source-dirs: src-network/terminal-web-server
+    exposed-modules:
+      - Network.TerminalServer
+    dependencies:
+      - bytestring
+      - text
+      - warp
+      - wai
+      - http-types
+      - wai-app-static
+      - wai-websockets
+      - websockets
+      - stm
+      
+      - terminal-connection
+      - flatbuffers
+      - msg
+      - lifetime
+  #---World
+  world:
+    source-dirs: src-world/world
+    exposed-modules:
+      - World
+    dependencies:
+      - linear
+      - vector
+    extra-lib-dirs: []
+    extra-libraries:
+      - druntime
+      - phobos2
+      - sigmatauworld
+  #---Ship
+  ship:
+    source-dirs: src-ship/ship
+    exposed-modules:
+      - Ship
+    dependencies:
+      - lifetime
+      - lifetime-set
+      - terminal-connection
+      - flatbuffers
+      - msg
+      - world
+      - stm
+      - linear
+    
+
+executable:
+  main: Main.hs
+  source-dirs: src/main
+  dependencies:
+    - world
+    - ship
+    - stm
+    - linear
+    - lifetime
+    - terminal-connection
+    - flatbuffers
+    - msg
+    - terminal-web-server

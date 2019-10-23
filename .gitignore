@@ -1,0 +1,8 @@
+*\.cabal
+\.ghc\.environment.*
+
+**/\.stack-work/
+**/dist-newstyle/
+**/dist/
+
+**/\.dub/

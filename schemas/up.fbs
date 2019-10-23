@@ -1,0 +1,25 @@
+namespace Data.Msg.Up;
+
+
+table UpMsg {
+	content	:	MsgContent	;
+}
+
+
+union MsgContent
+{ SetThruster
+, AdjustThruster
+}
+
+
+table SetThruster {
+	id	:	uint32	;
+	value	:	int16	;
+}
+table AdjustThruster {
+	id	:	uint32	;
+	value	:	int16	;
+}
+
+
+root_type UpMsg;
