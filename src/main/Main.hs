@@ -4,6 +4,7 @@ module Main where
 import Linear.Affine
 import Linear.V3
 
+import Control.Monad (forever)
 import Control.Concurrent (threadDelay)
 
 import World
@@ -35,24 +36,15 @@ main = do
 	----connectionChan <- atomically newTChan
 	ship <- newShip world connectionChan
 	msgChan <- atomically newTChan
-	atomically $ writeTChan connectionChan $ Lifetime $ return $ Just $ Connection $ msgChan
-	sequence_ $ atomically <$> (writeTChan msgChan <$> (decode $ encode $ upMsg $ msgContentSetThruster $ setThruster (Just 0) (Just 2)))
-	getLine
-	ship
-	sequence_ $ atomically <$> (writeTChan msgChan <$> (decode $ encode $ upMsg $ msgContentSetThruster $ setThruster (Just 0) (Just 2)))
-	getLine
-	ship
-	sequence_ $ atomically <$> (writeTChan msgChan <$> (decode $ encode $ upMsg $ msgContentAdjustThruster $ adjustThruster (Just 0) (Just (-8))))
+	----atomically $ writeTChan connectionChan $ Lifetime $ return $ Just $ Connection $ msgChan
+	----sequence_ $ atomically <$> (writeTChan msgChan <$> (decode $ encode $ upMsg $ msgContentSetThruster $ setThruster (Just 0) (Just 2)))
+	----getLine
+	----ship
+	----sequence_ $ atomically <$> (writeTChan msgChan <$> (decode $ encode $ upMsg $ msgContentSetThruster $ setThruster (Just 0) (Just 2)))
+	----getLine
+	----ship
+	----sequence_ $ atomically <$> (writeTChan msgChan <$> (decode $ encode $ upMsg $ msgContentAdjustThruster $ adjustThruster (Just 0) (Just (-8))))
 	
-	threadDelay 100000
-	getLine
-	ship
-	getLine
-	ship
-	getLine
-	ship
-	getLine
-	ship
 	
-	return ()
+	forever (threadDelay 1000000>>ship)
 
