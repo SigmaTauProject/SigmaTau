@@ -18,7 +18,7 @@ import Network.Terminal (runTerminal)
 ----import Msg.Down
 
 import Data.Lifetime
-import qualified Network.TerminalConnection as Terminal (Connection)
+import qualified Network.TerminalConnection as Terminal (Connection(Connection))
 
 runTerminalServer :: IO (TChan (Lifetime Terminal.Connection))
 runTerminalServer = do
@@ -26,7 +26,12 @@ runTerminalServer = do
 	putStrLn $ "Listening on port " ++ show port
 	let app = staticApp $ defaultWebAppSettings "www"
 	newConChan <- atomically $ newTChan
-	let wsApp = websocketsOr defaultConnectionOptions (\pc->acceptRequest pc >>= runTerminal >>= atomically . writeTChan newConChan) app
+	let wsApp = websocketsOr defaultConnectionOptions (\pc->do
+			msgChan <- atomically newTChan
+			let con = Terminal.Connection msgChan
+			atomically $ writeTChan newConChan $ Lifetime (return $ Just $ con)
+			acceptRequest pc >>= runTerminal msgChan
+		) app
 	forkIO $ run port wsApp
 	return newConChan
 
