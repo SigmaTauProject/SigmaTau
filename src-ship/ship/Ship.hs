@@ -1,4 +1,5 @@
 {-# LANGUAGE TupleSections #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 module Ship (newShip) where
 
 import Linear.Affine
@@ -38,14 +39,14 @@ newShip world networkConnection = do
 						case content of
 							Union (MsgContentSetThruster setThruster) -> do
 								id <- setThrusterId setThruster
-								value <- setThrusterValue setThruster
+								value <- unnetworkFloat <$> setThrusterValue setThruster
 								return $ do
 									print id
 									print value
 									writeIORef thrusterValueRef value
 							Union (MsgContentAdjustThruster adjustThruster) -> do
 								id <- adjustThrusterId adjustThruster
-								value <- adjustThrusterValue adjustThruster
+								value <- unnetworkFloat <$> adjustThrusterValue adjustThruster
 								return $ do
 									print id
 									print value
@@ -54,7 +55,7 @@ newShip world networkConnection = do
 			)
 		
 		
-		forceEntity world entity =<< V3 <$> (fromIntegral <$> readIORef thrusterValueRef) <*> pure 0 <*> pure 0
+		forceEntity world entity =<< V3 <$> (truncate . (*64) <$> readIORef thrusterValueRef) <*> pure 0 <*> pure 0
 	
 	
 
@@ -64,6 +65,11 @@ forTChan chan f = theDo =<< (atomically $ tryReadTChan chan)
 	where	theDo (Nothing) = return ()
 		theDo (Just v) = f v >> forTChan chan f
 
+
+unnetworkFloat :: forall a. (Integral a, Bounded a) => a -> Float
+unnetworkFloat value
+	| (minBound :: a) >= 0 = fromIntegral value / fromIntegral (maxBound :: a)
+	| otherwise = max (-1) $ fromIntegral value / fromIntegral (maxBound :: a)
 
 
 
