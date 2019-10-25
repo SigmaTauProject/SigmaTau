@@ -1,0 +1,22 @@
+namespace Msg.Down;
+
+struct Vec3 {
+	x:float;
+	y:float;
+	z:float;
+}
+
+//---LA (Location Array)
+table LAUpdate {
+	values	:	[Vec3]	;
+}
+
+union MsgContent
+{ LAUpdate
+}
+
+table DownMsg {
+	content	:	MsgContent	;
+}
+
+root_type DownMsg;
