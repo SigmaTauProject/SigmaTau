@@ -27,10 +27,11 @@ runTerminalServer = do
 	let app = staticApp $ defaultWebAppSettings "www"
 	newConChan <- atomically $ newTChan
 	let wsApp = websocketsOr defaultConnectionOptions (\pc->do
-			msgChan <- atomically newTChan
-			let con = Terminal.Connection msgChan
+			upMsgChan <- atomically newTChan
+			downMsgChan <- atomically newTChan
+			let con = Terminal.Connection upMsgChan downMsgChan
 			atomically $ writeTChan newConChan $ Lifetime (return $ Just $ con)
-			acceptRequest pc >>= runTerminal msgChan
+			acceptRequest pc >>= runTerminal upMsgChan downMsgChan
 		) app
 	forkIO $ run port wsApp
 	return newConChan

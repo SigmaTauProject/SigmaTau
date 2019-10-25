@@ -20,11 +20,12 @@ import Data.ByteString.Lazy (fromStrict, toStrict)
 
 import FlatBuffers
 import Data.Msg.Up
+import Data.Msg.Down
 import qualified Network.TerminalConnection as Terminal (Connection(Connection))
 import Data.Lifetime
 
-runTerminal :: TChan (Table UpMsg) -> Connection -> IO ()
-runTerminal upMsgChan connection = do
+runTerminal :: TChan (Table UpMsg) -> TChan (WriteTable DownMsg) -> Connection -> IO ()
+runTerminal upMsgChan downMsgChan connection = do
 	putStrLn "New Connection"
 	----sendChannel <- newChan
 	----let sendPush = newPush (\m->print m>>writeChan sendChannel m)
@@ -41,7 +42,9 @@ runTerminal upMsgChan connection = do
 	----let con = Terminal.Connection upMsgChan
 	----return $ Lifetime (return $ Just $ con)
 	--writing thread
-	forever (threadDelay 100000)
+	forever $ do
+		msg <- atomically $ readTChan downMsgChan
+		sendDataMessage connection (Binary $ encode msg)
 	----sequence_ =<< fmap (sendDataMessage connection . Binary . fromStrict . serializeDownMsg) <$> getChanContents sendChannel
 
 
