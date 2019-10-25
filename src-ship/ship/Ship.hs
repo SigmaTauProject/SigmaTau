@@ -33,7 +33,7 @@ makeThruster effect = Thruster <$> newIORef 0 <*> pure effect
 newShip :: World -> NetworkConnection -> IO (IO ())
 newShip world networkConnection = do
 	activeConnections <- newLifetimeSet
-	entity <- newEntity world (P $ V3 0 0 0)
+	entity <- newEntity world TypeShip (P $ V3 0 0 0)
 	
 	thrusters <- sequence $ [makeThruster (V3 1 0 0), makeThruster (V3 0 1 0)]
 	

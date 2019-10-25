@@ -22,8 +22,8 @@ import Data.Msg.Up as UM
 
 main = do
 	world <- newWorld
-	entity1 <- newEntity world (P $ V3 1 1 0)
-	entity2 <- newEntity world (P $ V3 10 5 (-21))
+	entity1 <- newEntity world TypeShip (P $ V3 1 1 0)
+	entity2 <- newEntity world TypeShip (P $ V3 10 5 (-21))
 	forceEntity world entity1 (V3 1 0 0)
 	entity2pos <- getEntityPos world entity1 entity2
 	print entity2pos

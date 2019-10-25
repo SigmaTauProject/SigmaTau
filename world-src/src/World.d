@@ -7,10 +7,11 @@ import core.memory;
 import std.algorithm;
 import std.range;
 
-enum EntityType {
+enum EntityType : int {
 	Asteroid	,
 	Station	,
 	Ship	,
+	Missile	,
 }
 
 struct World {
@@ -18,6 +19,7 @@ struct World {
 }
 
 struct Entity {
+	EntityType type;
 	int[3] pos;
 	int[3] vel;
 }
@@ -47,9 +49,9 @@ void updateWorld(World* world) {
 
 
 extern(C) export
-EntityRef newEntity(World* world, int x, int y, int z) {
+EntityRef newEntity(World* world, EntityType type, int x, int y, int z) {
 	writeln("New Entity: ",x," ",y," ",z);
-	world.entities ~= new Entity([x,y,z]);
+	world.entities ~= new Entity(type, [x,y,z]);
 	return world.entities.length.cst!uint - 1;
 }
 extern(C) export

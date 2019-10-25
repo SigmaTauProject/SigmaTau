@@ -22,10 +22,13 @@ newtype World = World (ForeignPtr ())
 type ERefFFI = Word32
 newtype EntityRef = EntityRef ERefFFI
 
+data EntityType = TypeAsteroid | TypeStation | TypeShip | TypeMissile
+	deriving (Enum,Show)
+
 foreign import ccall "newWorld" newWorldFFI :: IO (Ptr ())
 foreign import ccall "&destroyWorld" destroyWorldFFIPtr :: FunPtr (Ptr () -> IO())
 foreign import ccall "updateWorld" updateWorldFFI :: Ptr() -> IO ()
-foreign import ccall "newEntity" newEntityFFI :: Ptr() -> Int32 -> Int32 -> Int32 -> IO (ERefFFI)
+foreign import ccall "newEntity" newEntityFFI :: Ptr() -> Int32 -> Int32 -> Int32 -> Int32 -> IO (ERefFFI)
 foreign import ccall "moveEntity" moveEntityFFI :: Ptr() -> ERefFFI -> Int32 -> Int32 -> Int32 -> IO ()
 foreign import ccall "forceEntity" forceEntityFFI :: Ptr() -> ERefFFI -> CFloat -> CFloat -> CFloat -> IO ()
 foreign import ccall "getEntityPos" getEntityPosFFI :: Ptr() -> ERefFFI -> ERefFFI -> IO (Ptr (V3 Int32))
@@ -43,8 +46,8 @@ newWorld = do
 updateWorld :: World -> IO ()
 updateWorld (World world) = withForeignPtr world (\w->updateWorldFFI w)
 
-newEntity :: World -> Point V3 Int32 -> IO EntityRef
-newEntity (World world) (P (V3 x y z)) = EntityRef <$> withForeignPtr world (\w->newEntityFFI w x y z)
+newEntity :: World -> EntityType -> Point V3 Int32 -> IO EntityRef
+newEntity (World world) entityType (P (V3 x y z)) = EntityRef <$> withForeignPtr world (\w->newEntityFFI w (fromIntegral $ fromEnum entityType) x y z)
 
 ----moveEntity :: World -> EntityRef -> (Int32,Int32,Int32) -> IO ()
 ----moveEntity (World world) (EntityRef entityRef) (x,y,z) = withForeignPtr world (\w->moveEntityFFI w entityRef x y z)
