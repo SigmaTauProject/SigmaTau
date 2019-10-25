@@ -8,7 +8,7 @@ module World where
 import Control.Monad ((<=<))
 
 import Foreign.C
-----import Foreign.C.Types
+import Foreign.C.Types
 import Data.Int
 import Data.Word
 import Foreign.Ptr
@@ -27,7 +27,7 @@ foreign import ccall "&destroyWorld" destroyWorldFFIPtr :: FunPtr (Ptr () -> IO(
 foreign import ccall "updateWorld" updateWorldFFI :: Ptr() -> IO ()
 foreign import ccall "newEntity" newEntityFFI :: Ptr() -> Int32 -> Int32 -> Int32 -> IO (ERefFFI)
 foreign import ccall "moveEntity" moveEntityFFI :: Ptr() -> ERefFFI -> Int32 -> Int32 -> Int32 -> IO ()
-foreign import ccall "forceEntity" forceEntityFFI :: Ptr() -> ERefFFI -> Int32 -> Int32 -> Int32 -> IO ()
+foreign import ccall "forceEntity" forceEntityFFI :: Ptr() -> ERefFFI -> CFloat -> CFloat -> CFloat -> IO ()
 foreign import ccall "getEntityPos" getEntityPosFFI :: Ptr() -> ERefFFI -> ERefFFI -> IO (Ptr (V3 Int32))
 ----foreign import ccall "getEntityPos" getEntityPosFFI :: (Ptr()) -> CUInt -> IO (Int32,Int32,Int32)
 type DoEntitiesCallback = ERefFFI->IO ()
@@ -49,8 +49,8 @@ newEntity (World world) (P (V3 x y z)) = EntityRef <$> withForeignPtr world (\w-
 ----moveEntity :: World -> EntityRef -> (Int32,Int32,Int32) -> IO ()
 ----moveEntity (World world) (EntityRef entityRef) (x,y,z) = withForeignPtr world (\w->moveEntityFFI w entityRef x y z)
 
-forceEntity :: World -> EntityRef -> V3 Int32 -> IO ()
-forceEntity (World world) (EntityRef entityRef) (V3 x y z) = withForeignPtr world (\w->forceEntityFFI w entityRef x y z)
+forceEntity :: World -> EntityRef -> V3 Float -> IO ()
+forceEntity (World world) (EntityRef entityRef) (V3 x y z) = withForeignPtr world (\w->forceEntityFFI w entityRef (CFloat x) (CFloat y) (CFloat z))
 
 getEntityPos :: World -> EntityRef -> EntityRef -> IO (Point V3 Int32)
 getEntityPos (World world) (EntityRef rootEntityRef) (EntityRef entityRef) = withForeignPtr world (\w->P <$> (peek =<< getEntityPosFFI w rootEntityRef entityRef))

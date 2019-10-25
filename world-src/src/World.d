@@ -5,6 +5,7 @@ import cst_;
 import std.stdio;
 import core.memory;
 import std.algorithm;
+import std.range;
 
 enum EntityType {
 	Asteroid	,
@@ -57,8 +58,8 @@ void moveEntity(World* world, EntityRef er, int x, int y, int z) {
 	writeln("Move Entity: ",world.entities[er].pos);
 }
 extern(C) export
-void forceEntity(World* world, EntityRef er, int x, int y, int z) {
-	world.entities[er].vel[] += [x,y,z];
+void forceEntity(World* world, EntityRef er, float x, float y, float z) {
+	world.entities[er].vel[] += [x,y,z].map!"a*256".map!(cst!(int,float)).array()[];
 	writeln("Force Entity: ",world.entities[er].vel);
 }
 
