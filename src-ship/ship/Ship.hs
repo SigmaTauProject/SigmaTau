@@ -3,8 +3,10 @@
 module Ship (newShip) where
 
 import Linear.Affine
+import Linear.Vector ((*^))
 import Linear.V3
 
+import Data.List (foldl')
 import Data.IORef
 import Control.Concurrent.STM (atomically)
 import Control.Concurrent.STM.TChan
@@ -22,12 +24,19 @@ import Data.Msg.Up as UM
 
 type NetworkConnection = (TChan (Lifetime Connection))
 
+data Thruster = Thruster	{ thrusterPower :: IORef Float
+	, thrusterEffect :: V3 Float
+	}
+
+makeThruster effect = Thruster <$> newIORef 0 <*> pure effect
+
 newShip :: World -> NetworkConnection -> IO (IO ())
 newShip world networkConnection = do
 	activeConnections <- newLifetimeSet
 	entity <- newEntity world (P $ V3 0 0 0)
-	thrusterValueRef <- newIORef 0
-	thrusterValueRef2 <- newIORef 0
+	
+	thrusters <- sequence $ [makeThruster (V3 1 0 0), makeThruster (V3 0 1 0)]
+	
 	return $ do
 		forTChan networkConnection $ (\con->do
 				putStrLn "Con!"
@@ -44,23 +53,19 @@ newShip world networkConnection = do
 								return $ do
 									print id
 									print value
-									if (id==0)
-										then writeIORef thrusterValueRef value
-										else writeIORef thrusterValueRef2 value
+									sequence_ $ writeIORef <$> (thrusterPower <$> thrusters !? fromIntegral id) <*> pure value
 							Union (MsgContentWireAdjust wireAdjust) -> do
 								id <- wireAdjustId wireAdjust
 								value <- unnetworkFloat <$> wireAdjustValue wireAdjust
 								return $ do
 									print id
 									print value
-									if (id==0)
-										then modifyIORef' thrusterValueRef (\tv->tv + value)
-										else modifyIORef' thrusterValueRef2 (\tv->tv + value)
+									sequence_ $ modifyIORef' <$> (thrusterPower <$> thrusters !? fromIntegral id) <*> pure (\tv->tv + value)
 					)
 			)
 		
-		
-		forceEntity world entity =<< V3 <$> (truncate . (*64) <$> readIORef thrusterValueRef) <*> (truncate . (*64) <$> readIORef thrusterValueRef2) <*> pure 0
+		forceEntity world entity =<< foldl' (+) (V3 0 0 0) <$> (sequence $ (\(Thruster powerRef effect)->(*^ effect) <$> readIORef powerRef) <$> thrusters)
+		----forceEntity world entity =<< V3 <$> (truncate . (*64) <$> readIORef thrusterValueRef) <*> (truncate . (*64) <$> readIORef thrusterValueRef2) <*> pure 0
 	
 	
 
@@ -77,5 +82,12 @@ unnetworkFloat value
 	| otherwise = max (-1) $ fromIntegral value / fromIntegral (maxBound :: a)
 
 
-
+infixl 9 !?
+(!?) :: [a] -> Int -> Maybe a
+(!?) xs o
+	| o < 0 = Nothing
+	| otherwise = f o xs
+	where	f 0 (x:xs) = Just x
+		f i (x:xs) = f (i-1) xs
+		f i [] = Nothing
 
