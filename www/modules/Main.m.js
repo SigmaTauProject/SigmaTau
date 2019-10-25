@@ -1,5 +1,5 @@
 import {div,Div} from "/modules/Div.m.js";
-import {Port,Wire} from "/modules/Ports.m.js";
+import {portBuilder,Port,Wire} from "/modules/Ports.m.js";
 import makeLayout from "./Layout.m.js";
 
 function startNetworking() {
@@ -18,6 +18,10 @@ function startNetworking() {
 	window.ws = ws;
 }
 
+
+function send(bytes) {
+	ws.send(bytes);
+}
 ////function send(value) {
 ////	value = networkFloat(value,16,true);
 ////	
@@ -51,7 +55,7 @@ startNetworking();
 
 let iframe = div("iframe");
 document.body.appendChild(iframe);
-iframe.contentDocument.body.parentElement.replaceChild(makeLayout([new Wire(0),new Wire(1)]), iframe.contentDocument.body);
+iframe.contentDocument.body.parentElement.replaceChild(makeLayout(portBuilder(send).wire().wire().done()), iframe.contentDocument.body);
 ////iframe.contentDocument.bodyj.appendChild(controls);
 ////document.body.appendChild(iframe);
 ////
