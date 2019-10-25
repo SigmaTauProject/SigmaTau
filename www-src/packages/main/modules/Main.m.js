@@ -1,4 +1,5 @@
 import {div,Div} from "/modules/Div.m.js";
+import {Port,Wire} from "/modules/Ports.m.js";
 import makeLayout from "./Layout.m.js";
 
 function startNetworking() {
@@ -17,23 +18,23 @@ function startNetworking() {
 	window.ws = ws;
 }
 
-function send(value) {
-	value = networkFloat(value,16,true);
-	
-	let builder = new flatbuffers.Builder(1024);
-	Data.Msg.Up.SetThruster.startSetThruster(builder);
-	Data.Msg.Up.SetThruster.addId(builder, 0);
-	Data.Msg.Up.SetThruster.addValue(builder, value);
-	let thruster = Data.Msg.Up.SetThruster.endSetThruster(builder);
-	Data.Msg.Up.UpMsg.startUpMsg(builder);
-	Data.Msg.Up.UpMsg.addContentType(builder, Data.Msg.Up.MsgContent.SetThruster);
-	Data.Msg.Up.UpMsg.addContent(builder, thruster);
-	let msg = Data.Msg.Up.UpMsg.endUpMsg(builder);
-	builder.finish(msg);
-	let buf = builder.asUint8Array();
-	ws.send(buf);
-}
-window.send = send;
+////function send(value) {
+////	value = networkFloat(value,16,true);
+////	
+////	let builder = new flatbuffers.Builder(1024);
+////	Data.Msg.Up.SetThruster.startSetThruster(builder);
+////	Data.Msg.Up.SetThruster.addId(builder, 0);
+////	Data.Msg.Up.SetThruster.addValue(builder, value);
+////	let thruster = Data.Msg.Up.SetThruster.endSetThruster(builder);
+////	Data.Msg.Up.UpMsg.startUpMsg(builder);
+////	Data.Msg.Up.UpMsg.addContentType(builder, Data.Msg.Up.MsgContent.SetThruster);
+////	Data.Msg.Up.UpMsg.addContent(builder, thruster);
+////	let msg = Data.Msg.Up.UpMsg.endUpMsg(builder);
+////	builder.finish(msg);
+////	let buf = builder.asUint8Array();
+////	ws.send(buf);
+////}
+////window.send = send;
 
 function networkFloat(value,bits,signed=true,value100=1) {
 	value = Math.min(value100,Math.max(signed?-value100:0,value));
@@ -50,7 +51,7 @@ startNetworking();
 
 let iframe = div("iframe");
 document.body.appendChild(iframe);
-iframe.contentDocument.body.parentElement.replaceChild(makeLayout(send), iframe.contentDocument.body);
+iframe.contentDocument.body.parentElement.replaceChild(makeLayout([new Wire(0),new Wire(1)]), iframe.contentDocument.body);
 ////iframe.contentDocument.bodyj.appendChild(controls);
 ////document.body.appendChild(iframe);
 ////

@@ -3,10 +3,14 @@ import {div,Div} from "/modules/Div.m.js";
 
 import {cell} from "/modules/FRP/Cell.m.js";
 
+import {Port,Wire} from "/modules/Ports.m.js";
+
 
 export default
-function makeLayout(thrusterSetCallback) {
-	return div("body",slider().escRef(s=>s.value.changes().forEach(v=>thrusterSetCallback(v))));
+function makeLayout(ports) {
+	return div("body",
+		ports	.filter(p=>p.type=="wire")
+			.map(p=>slider().escRef(s=>s.value.changes().forEach(v=>p.set(v)))));
 }
 
 

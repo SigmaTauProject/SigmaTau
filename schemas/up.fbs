@@ -1,17 +1,17 @@
-namespace Data.Msg.Up;
+namespace Msg.Up;
 
-table SetThruster {
+table WireSet {
 	id	:	uint32	;
 	value	:	int16	;
 }
-table AdjustThruster {
+table WireAdjust {
 	id	:	uint32	;
 	value	:	int16	;
 }
 
 union MsgContent
-{ SetThruster
-, AdjustThruster
+{ WireSet
+, WireAdjust
 }
 
 table UpMsg {
