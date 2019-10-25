@@ -28,7 +28,7 @@ class Wire extends Port {
 			let builder = new flatbuffers.Builder(1024);
 			
 			Msg.Up.WireSet.startWireSet(builder);
-			Msg.Up.WireSet.addId(builder, 0);
+			Msg.Up.WireSet.addId(builder, this.id);
 			Msg.Up.WireSet.addValue(builder, value);
 			let msgContent = Msg.Up.WireSet.endWireSet(builder);
 			
@@ -51,7 +51,7 @@ class Wire extends Port {
 			let builder = new flatbuffers.Builder(1024);
 			
 			Msg.Up.WireAdjust.startWireAdjust(builder);
-			Msg.Up.WireAdjust.addId(builder, 0);
+			Msg.Up.WireAdjust.addId(builder, this.id);
 			Msg.Up.WireAdjust.addValue(builder, value);
 			let msgContent = Msg.Up.WireAdjust.endWireAdjust(builder);
 			
