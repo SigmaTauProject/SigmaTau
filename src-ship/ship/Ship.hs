@@ -27,6 +27,7 @@ newShip world networkConnection = do
 	activeConnections <- newLifetimeSet
 	entity <- newEntity world (P $ V3 0 0 0)
 	thrusterValueRef <- newIORef 0
+	thrusterValueRef2 <- newIORef 0
 	return $ do
 		forTChan networkConnection $ (\con->do
 				putStrLn "Con!"
@@ -37,25 +38,29 @@ newShip world networkConnection = do
 				forTChan chan (\msg->sequence_ $ do
 						content <- upMsgContent msg
 						case content of
-							Union (MsgContentSetThruster setThruster) -> do
-								id <- setThrusterId setThruster
-								value <- unnetworkFloat <$> setThrusterValue setThruster
+							Union (MsgContentWireSet wireSet) -> do
+								id <- wireSetId wireSet
+								value <- unnetworkFloat <$> wireSetValue wireSet
 								return $ do
 									print id
 									print value
-									writeIORef thrusterValueRef value
-							Union (MsgContentAdjustThruster adjustThruster) -> do
-								id <- adjustThrusterId adjustThruster
-								value <- unnetworkFloat <$> adjustThrusterValue adjustThruster
+									if (id==0)
+										then writeIORef thrusterValueRef value
+										else writeIORef thrusterValueRef2 value
+							Union (MsgContentWireAdjust wireAdjust) -> do
+								id <- wireAdjustId wireAdjust
+								value <- unnetworkFloat <$> wireAdjustValue wireAdjust
 								return $ do
 									print id
 									print value
-									modifyIORef' thrusterValueRef (\tv->tv + value)
+									if (id==0)
+										then modifyIORef' thrusterValueRef (\tv->tv + value)
+										else modifyIORef' thrusterValueRef2 (\tv->tv + value)
 					)
 			)
 		
 		
-		forceEntity world entity =<< V3 <$> (truncate . (*64) <$> readIORef thrusterValueRef) <*> pure 0 <*> pure 0
+		forceEntity world entity =<< V3 <$> (truncate . (*64) <$> readIORef thrusterValueRef) <*> (truncate . (*64) <$> readIORef thrusterValueRef2) <*> pure 0
 	
 	
 

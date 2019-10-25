@@ -4,42 +4,36 @@
  * @const
  * @namespace
  */
-var Data = Data || {};
+var Msg = Msg || {};
 
 /**
  * @const
  * @namespace
  */
-Data.Msg = Data.Msg || {};
-
-/**
- * @const
- * @namespace
- */
-Data.Msg.Up = Data.Msg.Up || {};
+Msg.Up = Msg.Up || {};
 
 /**
  * @enum {number}
  */
-Data.Msg.Up.MsgContent = {
+Msg.Up.MsgContent = {
   NONE: 0,
-  SetThruster: 1,
-  AdjustThruster: 2
+  WireSet: 1,
+  WireAdjust: 2
 };
 
 /**
  * @enum {string}
  */
-Data.Msg.Up.MsgContentName = {
+Msg.Up.MsgContentName = {
   0: 'NONE',
-  1: 'SetThruster',
-  2: 'AdjustThruster'
+  1: 'WireSet',
+  2: 'WireAdjust'
 };
 
 /**
  * @constructor
  */
-Data.Msg.Up.SetThruster = function() {
+Msg.Up.WireSet = function() {
   /**
    * @type {flatbuffers.ByteBuffer}
    */
@@ -54,9 +48,9 @@ Data.Msg.Up.SetThruster = function() {
 /**
  * @param {number} i
  * @param {flatbuffers.ByteBuffer} bb
- * @returns {Data.Msg.Up.SetThruster}
+ * @returns {Msg.Up.WireSet}
  */
-Data.Msg.Up.SetThruster.prototype.__init = function(i, bb) {
+Msg.Up.WireSet.prototype.__init = function(i, bb) {
   this.bb_pos = i;
   this.bb = bb;
   return this;
@@ -64,17 +58,17 @@ Data.Msg.Up.SetThruster.prototype.__init = function(i, bb) {
 
 /**
  * @param {flatbuffers.ByteBuffer} bb
- * @param {Data.Msg.Up.SetThruster=} obj
- * @returns {Data.Msg.Up.SetThruster}
+ * @param {Msg.Up.WireSet=} obj
+ * @returns {Msg.Up.WireSet}
  */
-Data.Msg.Up.SetThruster.getRootAsSetThruster = function(bb, obj) {
-  return (obj || new Data.Msg.Up.SetThruster).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+Msg.Up.WireSet.getRootAsWireSet = function(bb, obj) {
+  return (obj || new Msg.Up.WireSet).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
 /**
  * @returns {number}
  */
-Data.Msg.Up.SetThruster.prototype.id = function() {
+Msg.Up.WireSet.prototype.id = function() {
   var offset = this.bb.__offset(this.bb_pos, 4);
   return offset ? this.bb.readUint32(this.bb_pos + offset) : 0;
 };
@@ -82,7 +76,7 @@ Data.Msg.Up.SetThruster.prototype.id = function() {
 /**
  * @returns {number}
  */
-Data.Msg.Up.SetThruster.prototype.value = function() {
+Msg.Up.WireSet.prototype.value = function() {
   var offset = this.bb.__offset(this.bb_pos, 6);
   return offset ? this.bb.readInt16(this.bb_pos + offset) : 0;
 };
@@ -90,7 +84,7 @@ Data.Msg.Up.SetThruster.prototype.value = function() {
 /**
  * @param {flatbuffers.Builder} builder
  */
-Data.Msg.Up.SetThruster.startSetThruster = function(builder) {
+Msg.Up.WireSet.startWireSet = function(builder) {
   builder.startObject(2);
 };
 
@@ -98,7 +92,7 @@ Data.Msg.Up.SetThruster.startSetThruster = function(builder) {
  * @param {flatbuffers.Builder} builder
  * @param {number} id
  */
-Data.Msg.Up.SetThruster.addId = function(builder, id) {
+Msg.Up.WireSet.addId = function(builder, id) {
   builder.addFieldInt32(0, id, 0);
 };
 
@@ -106,7 +100,7 @@ Data.Msg.Up.SetThruster.addId = function(builder, id) {
  * @param {flatbuffers.Builder} builder
  * @param {number} value
  */
-Data.Msg.Up.SetThruster.addValue = function(builder, value) {
+Msg.Up.WireSet.addValue = function(builder, value) {
   builder.addFieldInt16(1, value, 0);
 };
 
@@ -114,7 +108,7 @@ Data.Msg.Up.SetThruster.addValue = function(builder, value) {
  * @param {flatbuffers.Builder} builder
  * @returns {flatbuffers.Offset}
  */
-Data.Msg.Up.SetThruster.endSetThruster = function(builder) {
+Msg.Up.WireSet.endWireSet = function(builder) {
   var offset = builder.endObject();
   return offset;
 };
@@ -125,17 +119,17 @@ Data.Msg.Up.SetThruster.endSetThruster = function(builder) {
  * @param {number} value
  * @returns {flatbuffers.Offset}
  */
-Data.Msg.Up.SetThruster.createSetThruster = function(builder, id, value) {
-  Data.Msg.Up.SetThruster.startSetThruster(builder);
-  Data.Msg.Up.SetThruster.addId(builder, id);
-  Data.Msg.Up.SetThruster.addValue(builder, value);
-  return Data.Msg.Up.SetThruster.endSetThruster(builder);
+Msg.Up.WireSet.createWireSet = function(builder, id, value) {
+  Msg.Up.WireSet.startWireSet(builder);
+  Msg.Up.WireSet.addId(builder, id);
+  Msg.Up.WireSet.addValue(builder, value);
+  return Msg.Up.WireSet.endWireSet(builder);
 }
 
 /**
  * @constructor
  */
-Data.Msg.Up.AdjustThruster = function() {
+Msg.Up.WireAdjust = function() {
   /**
    * @type {flatbuffers.ByteBuffer}
    */
@@ -150,9 +144,9 @@ Data.Msg.Up.AdjustThruster = function() {
 /**
  * @param {number} i
  * @param {flatbuffers.ByteBuffer} bb
- * @returns {Data.Msg.Up.AdjustThruster}
+ * @returns {Msg.Up.WireAdjust}
  */
-Data.Msg.Up.AdjustThruster.prototype.__init = function(i, bb) {
+Msg.Up.WireAdjust.prototype.__init = function(i, bb) {
   this.bb_pos = i;
   this.bb = bb;
   return this;
@@ -160,17 +154,17 @@ Data.Msg.Up.AdjustThruster.prototype.__init = function(i, bb) {
 
 /**
  * @param {flatbuffers.ByteBuffer} bb
- * @param {Data.Msg.Up.AdjustThruster=} obj
- * @returns {Data.Msg.Up.AdjustThruster}
+ * @param {Msg.Up.WireAdjust=} obj
+ * @returns {Msg.Up.WireAdjust}
  */
-Data.Msg.Up.AdjustThruster.getRootAsAdjustThruster = function(bb, obj) {
-  return (obj || new Data.Msg.Up.AdjustThruster).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+Msg.Up.WireAdjust.getRootAsWireAdjust = function(bb, obj) {
+  return (obj || new Msg.Up.WireAdjust).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
 /**
  * @returns {number}
  */
-Data.Msg.Up.AdjustThruster.prototype.id = function() {
+Msg.Up.WireAdjust.prototype.id = function() {
   var offset = this.bb.__offset(this.bb_pos, 4);
   return offset ? this.bb.readUint32(this.bb_pos + offset) : 0;
 };
@@ -178,7 +172,7 @@ Data.Msg.Up.AdjustThruster.prototype.id = function() {
 /**
  * @returns {number}
  */
-Data.Msg.Up.AdjustThruster.prototype.value = function() {
+Msg.Up.WireAdjust.prototype.value = function() {
   var offset = this.bb.__offset(this.bb_pos, 6);
   return offset ? this.bb.readInt16(this.bb_pos + offset) : 0;
 };
@@ -186,7 +180,7 @@ Data.Msg.Up.AdjustThruster.prototype.value = function() {
 /**
  * @param {flatbuffers.Builder} builder
  */
-Data.Msg.Up.AdjustThruster.startAdjustThruster = function(builder) {
+Msg.Up.WireAdjust.startWireAdjust = function(builder) {
   builder.startObject(2);
 };
 
@@ -194,7 +188,7 @@ Data.Msg.Up.AdjustThruster.startAdjustThruster = function(builder) {
  * @param {flatbuffers.Builder} builder
  * @param {number} id
  */
-Data.Msg.Up.AdjustThruster.addId = function(builder, id) {
+Msg.Up.WireAdjust.addId = function(builder, id) {
   builder.addFieldInt32(0, id, 0);
 };
 
@@ -202,7 +196,7 @@ Data.Msg.Up.AdjustThruster.addId = function(builder, id) {
  * @param {flatbuffers.Builder} builder
  * @param {number} value
  */
-Data.Msg.Up.AdjustThruster.addValue = function(builder, value) {
+Msg.Up.WireAdjust.addValue = function(builder, value) {
   builder.addFieldInt16(1, value, 0);
 };
 
@@ -210,7 +204,7 @@ Data.Msg.Up.AdjustThruster.addValue = function(builder, value) {
  * @param {flatbuffers.Builder} builder
  * @returns {flatbuffers.Offset}
  */
-Data.Msg.Up.AdjustThruster.endAdjustThruster = function(builder) {
+Msg.Up.WireAdjust.endWireAdjust = function(builder) {
   var offset = builder.endObject();
   return offset;
 };
@@ -221,17 +215,17 @@ Data.Msg.Up.AdjustThruster.endAdjustThruster = function(builder) {
  * @param {number} value
  * @returns {flatbuffers.Offset}
  */
-Data.Msg.Up.AdjustThruster.createAdjustThruster = function(builder, id, value) {
-  Data.Msg.Up.AdjustThruster.startAdjustThruster(builder);
-  Data.Msg.Up.AdjustThruster.addId(builder, id);
-  Data.Msg.Up.AdjustThruster.addValue(builder, value);
-  return Data.Msg.Up.AdjustThruster.endAdjustThruster(builder);
+Msg.Up.WireAdjust.createWireAdjust = function(builder, id, value) {
+  Msg.Up.WireAdjust.startWireAdjust(builder);
+  Msg.Up.WireAdjust.addId(builder, id);
+  Msg.Up.WireAdjust.addValue(builder, value);
+  return Msg.Up.WireAdjust.endWireAdjust(builder);
 }
 
 /**
  * @constructor
  */
-Data.Msg.Up.UpMsg = function() {
+Msg.Up.UpMsg = function() {
   /**
    * @type {flatbuffers.ByteBuffer}
    */
@@ -246,9 +240,9 @@ Data.Msg.Up.UpMsg = function() {
 /**
  * @param {number} i
  * @param {flatbuffers.ByteBuffer} bb
- * @returns {Data.Msg.Up.UpMsg}
+ * @returns {Msg.Up.UpMsg}
  */
-Data.Msg.Up.UpMsg.prototype.__init = function(i, bb) {
+Msg.Up.UpMsg.prototype.__init = function(i, bb) {
   this.bb_pos = i;
   this.bb = bb;
   return this;
@@ -256,26 +250,26 @@ Data.Msg.Up.UpMsg.prototype.__init = function(i, bb) {
 
 /**
  * @param {flatbuffers.ByteBuffer} bb
- * @param {Data.Msg.Up.UpMsg=} obj
- * @returns {Data.Msg.Up.UpMsg}
+ * @param {Msg.Up.UpMsg=} obj
+ * @returns {Msg.Up.UpMsg}
  */
-Data.Msg.Up.UpMsg.getRootAsUpMsg = function(bb, obj) {
-  return (obj || new Data.Msg.Up.UpMsg).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+Msg.Up.UpMsg.getRootAsUpMsg = function(bb, obj) {
+  return (obj || new Msg.Up.UpMsg).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
 /**
- * @returns {Data.Msg.Up.MsgContent}
+ * @returns {Msg.Up.MsgContent}
  */
-Data.Msg.Up.UpMsg.prototype.contentType = function() {
+Msg.Up.UpMsg.prototype.contentType = function() {
   var offset = this.bb.__offset(this.bb_pos, 4);
-  return offset ? /** @type {Data.Msg.Up.MsgContent} */ (this.bb.readUint8(this.bb_pos + offset)) : Data.Msg.Up.MsgContent.NONE;
+  return offset ? /** @type {Msg.Up.MsgContent} */ (this.bb.readUint8(this.bb_pos + offset)) : Msg.Up.MsgContent.NONE;
 };
 
 /**
  * @param {flatbuffers.Table} obj
  * @returns {?flatbuffers.Table}
  */
-Data.Msg.Up.UpMsg.prototype.content = function(obj) {
+Msg.Up.UpMsg.prototype.content = function(obj) {
   var offset = this.bb.__offset(this.bb_pos, 6);
   return offset ? this.bb.__union(obj, this.bb_pos + offset) : null;
 };
@@ -283,23 +277,23 @@ Data.Msg.Up.UpMsg.prototype.content = function(obj) {
 /**
  * @param {flatbuffers.Builder} builder
  */
-Data.Msg.Up.UpMsg.startUpMsg = function(builder) {
+Msg.Up.UpMsg.startUpMsg = function(builder) {
   builder.startObject(2);
 };
 
 /**
  * @param {flatbuffers.Builder} builder
- * @param {Data.Msg.Up.MsgContent} contentType
+ * @param {Msg.Up.MsgContent} contentType
  */
-Data.Msg.Up.UpMsg.addContentType = function(builder, contentType) {
-  builder.addFieldInt8(0, contentType, Data.Msg.Up.MsgContent.NONE);
+Msg.Up.UpMsg.addContentType = function(builder, contentType) {
+  builder.addFieldInt8(0, contentType, Msg.Up.MsgContent.NONE);
 };
 
 /**
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} contentOffset
  */
-Data.Msg.Up.UpMsg.addContent = function(builder, contentOffset) {
+Msg.Up.UpMsg.addContent = function(builder, contentOffset) {
   builder.addFieldOffset(1, contentOffset, 0);
 };
 
@@ -307,7 +301,7 @@ Data.Msg.Up.UpMsg.addContent = function(builder, contentOffset) {
  * @param {flatbuffers.Builder} builder
  * @returns {flatbuffers.Offset}
  */
-Data.Msg.Up.UpMsg.endUpMsg = function(builder) {
+Msg.Up.UpMsg.endUpMsg = function(builder) {
   var offset = builder.endObject();
   return offset;
 };
@@ -316,22 +310,22 @@ Data.Msg.Up.UpMsg.endUpMsg = function(builder) {
  * @param {flatbuffers.Builder} builder
  * @param {flatbuffers.Offset} offset
  */
-Data.Msg.Up.UpMsg.finishUpMsgBuffer = function(builder, offset) {
+Msg.Up.UpMsg.finishUpMsgBuffer = function(builder, offset) {
   builder.finish(offset);
 };
 
 /**
  * @param {flatbuffers.Builder} builder
- * @param {Data.Msg.Up.MsgContent} contentType
+ * @param {Msg.Up.MsgContent} contentType
  * @param {flatbuffers.Offset} contentOffset
  * @returns {flatbuffers.Offset}
  */
-Data.Msg.Up.UpMsg.createUpMsg = function(builder, contentType, contentOffset) {
-  Data.Msg.Up.UpMsg.startUpMsg(builder);
-  Data.Msg.Up.UpMsg.addContentType(builder, contentType);
-  Data.Msg.Up.UpMsg.addContent(builder, contentOffset);
-  return Data.Msg.Up.UpMsg.endUpMsg(builder);
+Msg.Up.UpMsg.createUpMsg = function(builder, contentType, contentOffset) {
+  Msg.Up.UpMsg.startUpMsg(builder);
+  Msg.Up.UpMsg.addContentType(builder, contentType);
+  Msg.Up.UpMsg.addContent(builder, contentOffset);
+  return Msg.Up.UpMsg.endUpMsg(builder);
 }
 
 // Exports for Node.js and RequireJS
-this.Data = Data;
+this.Msg = Msg;
