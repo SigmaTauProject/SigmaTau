@@ -37,6 +37,7 @@ internal-libraries:
     source-dirs: src-network/msg
     exposed-modules:
       - Data.Msg.Up
+      - Data.Msg.Down
     dependencies:
       - flatbuffers
   terminal-web-server:

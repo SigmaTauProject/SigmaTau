@@ -20,7 +20,9 @@ import Data.Lifetime.Set
 import Data.Word
 
 import FlatBuffers
+import qualified FlatBuffers.Vector as FB
 import Data.Msg.Up as UM
+import Data.Msg.Down as DM
 
 type NetworkConnection = (TChan (Lifetime Connection))
 
@@ -43,7 +45,8 @@ newShip world networkConnection = do
 				add activeConnections con
 			)
 		
-		withAll activeConnections (\con@(Connection chan)->do
+		let entitiesMsg = downMsg $ msgContentLAUpdate $ lAUpdate $ Just $ FB.fromList' $ [vec3 0 1 2]
+		withAll activeConnections (\con@(Connection chan downMsgChan)->do
 				forTChan chan (\msg->sequence_ $ do
 						content <- upMsgContent msg
 						case content of
@@ -62,6 +65,7 @@ newShip world networkConnection = do
 									print value
 									sequence_ $ modifyIORef' <$> (thrusterPower <$> thrusters !? fromIntegral id) <*> pure (\tv->tv + value)
 					)
+				atomically $ writeTChan downMsgChan entitiesMsg
 			)
 		
 		forceEntity world entity =<< foldl' (+) (V3 0 0 0) <$> (sequence $ (\(Thruster powerRef effect)->(*^ effect) <$> readIORef powerRef) <$> thrusters)
