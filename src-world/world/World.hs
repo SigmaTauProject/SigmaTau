@@ -18,6 +18,8 @@ import Foreign.Storable
 import Linear.Affine
 import Linear.V3
 
+import Data.IORef
+
 newtype World = World (ForeignPtr ())
 type ERefFFI = Word32
 newtype EntityRef = EntityRef ERefFFI
@@ -61,6 +63,28 @@ getEntityPos (World world) (EntityRef rootEntityRef) (EntityRef entityRef) = wit
 doEntities :: World -> (EntityRef->IO()) -> IO ()
 doEntities (World world) callback = withForeignPtr world (\w->(\fp->doEntitiesFFI w fp >> freeHaskellFunPtr fp) =<< mkDoEntitiesCallback (\er->callback $ EntityRef er))
 
+----withEntities :: World -> ([EntityRef] -> IO ()) -> IO ()
+----withEntities world f -> do
+----	f entities
+----	doEntities world (\entity)
+----	where entities = []
+
+concatMapEntities :: World -> (EntityRef->IO [a]) -> IO [a]
+concatMapEntities world callback = do
+	rdsRef <- newIORef []
+	doEntities world (\entity->do
+			rd <- callback entity
+			modifyIORef rdsRef (rd ++)
+		)
+	readIORef rdsRef
+mapEntities :: World -> (EntityRef->IO a) -> IO [a]
+mapEntities world callback = do
+	rdsRef <- newIORef []
+	doEntities world (\entity->do
+			rd <- callback entity
+			modifyIORef rdsRef (rd :)
+		)
+	readIORef rdsRef
 
 ----instance Storable (V3 Int32) where
 ----	sizeOf _ = 3 * sizeOf (undefined::Int32)
