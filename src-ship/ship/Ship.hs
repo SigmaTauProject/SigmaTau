@@ -45,7 +45,8 @@ newShip world networkConnection = do
 				add activeConnections con
 			)
 		
-		let entitiesMsg = downMsg $ msgContentLAUpdate $ lAUpdate $ Just $ FB.fromList' $ [vec3 0 1 2]
+		rawEntities <- mapEntities world (getEntityPos world entity)
+		let entitiesMsg = downMsg $ msgContentLAUpdate $ lAUpdate $ Just $ FB.fromList' $ fmap (toNetVec . unP) $ rawEntities
 		withAll activeConnections (\con@(Connection chan downMsgChan)->do
 				forTChan chan (\msg->sequence_ $ do
 						content <- upMsgContent msg
@@ -80,10 +81,16 @@ forTChan chan f = theDo =<< (atomically $ tryReadTChan chan)
 		theDo (Just v) = f v >> forTChan chan f
 
 
+networkFloat :: forall a. (Integral a, Bounded a) => Float -> a
+networkFloat value
+	| (minBound :: a) >= 0 = truncate $ min 1 value * fromIntegral (maxBound :: a)
+	| otherwise = truncate $ max (fromIntegral (minBound :: a)) $ min 1 value * fromIntegral (maxBound :: a)
 unnetworkFloat :: forall a. (Integral a, Bounded a) => a -> Float
 unnetworkFloat value
 	| (minBound :: a) >= 0 = fromIntegral value / fromIntegral (maxBound :: a)
 	| otherwise = max (-1) $ fromIntegral value / fromIntegral (maxBound :: a)
+
+toNetVec (V3 x y z) = vec3 x y z
 
 
 infixl 9 !?

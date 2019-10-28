@@ -66,9 +66,11 @@ void forceEntity(World* world, EntityRef er, float x, float y, float z) {
 }
 
 extern(C) export
-int[3]* getEntityPos(World* world, EntityRef rer, EntityRef er) {
-	int[3]* relPos = (new int[3]).ptr.cst!(int[3]*);
-	(*relPos)[] = world.entities[er].pos[] - world.entities[rer].pos[];
+float[3]* getEntityPos(World* world, EntityRef rer, EntityRef er) {
+	float[3]* relPos = (new float[3]).ptr.cst!(float[3]*);
+	int[3] tmp;
+	tmp[] = world.entities[er].pos[] - world.entities[rer].pos[];
+	(*relPos)[] = tmp[0..3].map!(cst!(float,int)).array()[];
 	return relPos;
 }
 
