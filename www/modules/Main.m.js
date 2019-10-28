@@ -11,6 +11,7 @@ function startNetworking() {
 		console.log("Message ",e)
 		e.data.arrayBuffer().then(d=>{
 			console.log(d);
+			console.log(Msg.Down.DownMsg.getRootAsDownMsg(new flatbuffers.ByteBuffer(d)));
 		});
 	});
 	ws.addEventListener("close",e=>console.log("Close ",e));
