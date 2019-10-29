@@ -8,3 +8,4 @@ target	"staticLibrary"
 targetPath	"build"
 
 dependency "cst"	version="~>1.0"
+dependency "gl3n"	version="~>1.3"
