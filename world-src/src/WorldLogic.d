@@ -116,7 +116,9 @@ vec3i getEntityPos(World* world, EntityAccess ea) {
 
 
 public {
+	alias vec2f = vec2;
 	alias vec3f = vec3;
+	alias vec4f = vec4;
 	alias vec2l = Vector!(long,2);
 	alias vec3l = Vector!(long,3);
 	alias vec4l = Vector!(long,4);
