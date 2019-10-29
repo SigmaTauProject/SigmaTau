@@ -37,7 +37,7 @@ newShip world networkConnection = do
 	activeConnections <- newLifetimeSet
 	entity <- newEntity world TypeShip (P $ V3 0 0 0)
 	
-	thrusters <- sequence $ [makeThruster (V3 0.001 0 0), makeThruster (V3 0 0.001 0)]
+	thrusters <- sequence $ [makeThruster (V3 1 0 0), makeThruster (V3 0 1 0)]
 	
 	return $ do
 		forTChan networkConnection $ (\con->do
