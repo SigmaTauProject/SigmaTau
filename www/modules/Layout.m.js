@@ -42,7 +42,7 @@ function locationArray(laPort) {
 			{	viewBox:"-1 -1 2 2",
 				style:"width:100%;height:100%;position:absolute;top:0;left:0;z-index:-1;",
 			},
-			svg("g", (el=>svgContent=el), {transform:"scale(1,-1) scale(0.05)"},
+			svg("g", (el=>svgContent=el), {transform:"scale(1,-1) scale(0.01)"},
 			),
 		),
 	);

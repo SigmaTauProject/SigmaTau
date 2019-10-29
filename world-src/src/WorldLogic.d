@@ -23,13 +23,15 @@ enum EntityType : int {
 public// private members & construction
 struct World {
 	Entity*[] entities;
+	MonoTime time;
 }
 private
 struct Entity {
-	Mutex mutex;
 	EntityType type;
 	vec3i pos;
 	vec3i vel;
+	Mutex mutex;
+	MonoTime time;
 }
 
 private
@@ -40,23 +42,34 @@ struct EntityAccess {
 }
 
 public
-World* newWorld() {
-	World* world = new World();
+World* newWorld(MonoTime time) {
+	World* world = new World([],time);
 	new Thread(worldThread(world)).start();
 	return world;
 }
 private
 void delegate() worldThread(World* world) {
-	return (){
+	enum loopDur = 500.msecs;// Must be an even fraction of a second to not cause accumulation of errors.
+	return () {
+		MonoTime updateTime;
 		while (true) {
-			Thread.sleep(50.msecs);
+			{
+				auto sleepTime = loopDur-(MonoTime.currTime-updateTime);
+				Thread.sleep(sleepTime>=0.msecs?sleepTime:0.msecs);
+				updateTime = MonoTime.currTime;
+			}
 			foreach (i,e; world.entities) {
 				withEntity(world,i,(_){
-					e.pos += e.vel;
+					e.time = updateTime;
+					e.pos += getDurVel(e.vel,loopDur);
 				});
 			}
 		}
 	};
+}
+public
+void forwardWorld(World* world, MonoTime time) {
+	world.time = time;
 }
 
 /**	Gain mutexed, multithreaded access to an entity.
@@ -97,7 +110,7 @@ EntityRef createEntity(World* world, EntityType type, vec3i pos, vec3i vel=vec3i
 		world.entities ~= entity;
 		return world.entities.length-1;
 	}
-	return addEntity(world, new Entity(new Mutex(),type,pos,vel));
+	return addEntity(world, new Entity(type,pos,vel,new Mutex(),world.time));
 }
 
 public
@@ -110,7 +123,16 @@ void forceEntity(World* world, EntityAccess ea, vec3i a) {
 }
 
 vec3i getEntityPos(World* world, EntityAccess ea) {
-	return world.entities[ea.er].pos;
+	return world.entities[ea.er].pos + getDurVel(world.entities[ea.er].vel, world.time-world.entities[ea.er].time);
+	////return world.entities[ea.er].pos;
+}
+
+
+
+private {
+	vec3i getDurVel(vec3i vel, Duration dur) {
+		return vel * dur.total!"msecs".cst!int;
+	}
 }
 
 
