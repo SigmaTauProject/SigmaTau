@@ -93,7 +93,7 @@ function portBuilder(send) {
 	let ports = [];
 	let ob = {};
 	ob.done = () => ports;
-	ob.ref = (f) => f(ports[ports.length-1]);
+	ob.ref = (f) => {f(ports[ports.length-1]); return ob;};
 	ob.wire = () => {ports.push(new Wire(send,nextID++)); return ob;};
 	ob.la = () => {ports.push(new LA(send,nextID++)); return ob;};
 	return ob;

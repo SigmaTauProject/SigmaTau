@@ -1,5 +1,5 @@
 
-import {div,Div} from "/modules/Div.m.js";
+import {div,svg,Div} from "/modules/Div.m.js";
 
 import {cell} from "/modules/FRP/Cell.m.js";
 
@@ -10,7 +10,10 @@ export default
 function makeLayout(ports) {
 	return div("body",
 		ports	.filter(p=>p.type=="wire")
-			.map(p=>slider().escRef(s=>s.value.changes().forEach(v=>p.set(v)))));
+			.map(p=>slider().escRef(s=>s.value.changes().forEach(v=>p.set(v)))),
+		ports	.filter(p=>p.type=="la")
+			.map(p=>locationArray(p)),
+	);
 }
 
 
@@ -30,6 +33,34 @@ function slider() {
 	slider.el.addEventListener("input",e=>c.change(e.srcElement.value));
 	slider.value = c.map(v=>Number(v));
 	return slider;
+}
+
+function locationArray(laPort) {
+	let svgContent;
+	let svgGui = new GUIItem(
+		svg("svg", 
+			{	viewBox:"-1 -1 2 2",
+				style:"width:100%;height:100%;",
+			},
+			svg("g", (el=>svgContent=el), {transform:"scale(0.05)"},
+				svg("polygon", {points:"-0.5,0.5 0,-0.5 0.5,0.5 0,0.25"}),
+			),
+		),
+	);
+	let shipEls = [];
+	setInterval(()=>{
+			laPort.locations.forEach((l,i)=>{
+				if (shipEls.length <= i) {
+					let newShip = svg("polygon", {points:"-0.5,0.5 0,-0.5 0.5,0.5 0,0.25"});
+					shipEls.push(newShip);
+					svgContent.appendChild(newShip);
+				}
+				shipEls[i].setAttribute("transform",`translate(${l[0]},${l[1]})`);
+			})
+		},
+		1000,
+	);
+	return svgGui;
 }
 
 

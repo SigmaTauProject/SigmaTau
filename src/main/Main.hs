@@ -46,5 +46,5 @@ main = do
 	----sequence_ $ atomically <$> (writeTChan msgChan <$> (decode $ encode $ upMsg $ msgContentAdjustThruster $ adjustThruster (Just 0) (Just (-8))))
 	
 	
-	forever (threadDelay 1000000>>ship)
+	forever (threadDelay 1000000>>updateWorld world>>ship)
 

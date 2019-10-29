@@ -1,5 +1,6 @@
-export function div (type,...args) {
-	var el =document.createElement(type);
+
+export function divNS(ns, type, ...args) {
+	var el =document.createElementNS(ns,type);
 	var refFunctions = [];
 	handleArgs(args);
 	for(let refFunction of refFunctions) {
@@ -19,7 +20,7 @@ export function div (type,...args) {
 			else if (arg instanceof Array) {
 				handleArgs(arg);
 			}
-			else if (arg instanceof HTMLElement) {
+			else if (arg instanceof Element) {
 				el.appendChild(arg);
 			}
 			else if ((typeof arg.nodeType != "undefined") && arg.nodeType==Node.TEXT_NODE) {
@@ -52,6 +53,7 @@ export function div (type,...args) {
 							value.forEach(c=>el.classList.add(c));
 					}
 					else {
+						console.log(key);
 						el.setAttribute(key, value);
 					}
 				}
@@ -59,6 +61,13 @@ export function div (type,...args) {
 		}
 	}
 	return el;
+}
+
+export function div(type, ...args) {
+	return divNS("http://www.w3.org/1999/xhtml", type, ...args);
+}
+export function svg(type, ...args) {
+	return divNS("http://www.w3.org/2000/svg", type, ...args);
 }
 
 

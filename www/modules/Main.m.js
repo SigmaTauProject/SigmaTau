@@ -8,10 +8,8 @@ function startNetworking() {
 	ws.addEventListener("open",e=>console.log("Open ",e));
 	ws.addEventListener("error",e=>console.log("Error ",e));
 	ws.addEventListener("message",e=>{
-		console.log("Message ",e)
 		e.data.arrayBuffer().then(d=>new Uint8Array(d)).then(d=>{
 			laPort.receiveMessage(d);
-			console.log(Msg.Down.DownMsg.getRootAsDownMsg(new flatbuffers.ByteBuffer(d)));
 		});
 	});
 	ws.addEventListener("close",e=>console.log("Close ",e));
@@ -57,7 +55,7 @@ startNetworking();
 let laPort;
 let iframe = div("iframe");
 document.body.appendChild(iframe);
-iframe.contentDocument.body.parentElement.replaceChild(
+setTimeout(()=>iframe.contentDocument.body.parentElement.replaceChild(
 	makeLayout(	portBuilder(send)
 		.wire()
 		.wire()
@@ -65,7 +63,7 @@ iframe.contentDocument.body.parentElement.replaceChild(
 		.done()
 	),
 	iframe.contentDocument.body
-);
+));
 ////iframe.contentDocument.bodyj.appendChild(controls);
 ////document.body.appendChild(iframe);
 ////
