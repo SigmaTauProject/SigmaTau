@@ -109,6 +109,10 @@ void forceEntity(World* world, EntityAccess ea, vec3i a) {
 	world.entities[ea.er].vel += a;
 }
 
+vec3i getEntityPos(World* world, EntityAccess ea) {
+	return world.entities[ea.er].pos;
+}
+
 
 
 public {

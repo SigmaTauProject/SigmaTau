@@ -44,12 +44,18 @@ extern(C) export {
 	}
 	
 	float[3]* getEntityPos(World* world, Entity rer, Entity er) {
-		return [((world.entities[er].pos - world.entities[rer].pos) / 256).ffiVec!float].ptr;
+		// TODO: Fix this, deadlocking is theoretically possable.  Should not hold a mutex while reaching for another.
+		return withEntity(world,rer,(rea)=>withEntity(world,er,(ea){
+			return [((WorldLogic.getEntityPos(world,rea) - WorldLogic.getEntityPos(world,ea)) / 256).ffiVec!float].ptr;
+		}));
 	}
 	
+	// TODO: Optimise this.
 	void doEntities(World* world, void function(Entity) callback) {
-		foreach (Entity i, e; world.entities) {
-			callback(i);
+		// TODO: Remove use of private access to content of world.
+		// TODO: (As in the last todo, this is considered illegal access for this file (thus this kind of unsafe should not be possable)) Fix this, it is still unsafe, as `world.entities` is not mutex locked.
+		foreach (Entity er; 0..(world.entities.length.cst!Entity)) {
+			callback(er);
 		}
 	}
 }
