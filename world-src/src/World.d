@@ -13,7 +13,7 @@ alias World = WorldLogic.World; // To cover this module (also called `World`).
 import gl3n.linalg;
 
 
-alias EntityRef = uint;
+alias Entity = uint;
 
 extern(C) export {
 	World* newWorld() {
@@ -29,22 +29,26 @@ extern(C) export {
 	}
 	
 	
-	EntityRef newEntity(World* world, EntityType type, int x, int y, int z) {
-		return WorldLogic.addEntity(world, new Entity(type, vec3i(x,y,z))).cst!uint;
+	Entity newEntity(World* world, EntityType type, int x, int y, int z) {
+		return WorldLogic.createEntity(world, type, vec3i(x,y,z)).cst!Entity;
 	}
-	void moveEntity(World* world, EntityRef er, int x, int y, int z) {
-		WorldLogic.moveEntity(world,er,vec3i(x,y,z));
+	void moveEntity(World* world, Entity er, int x, int y, int z) {
+		auto ea = accessEntity(world,er);
+		WorldLogic.moveEntity(world,ea,vec3i(x,y,z));
+		doneAccessingEntity(world,ea);
 	}
-	void forceEntity(World* world, EntityRef er, float x, float y, float z) {
-		WorldLogic.forceEntity(world,er, (vec3f(x,y,z)*256).vecCast!int);
+	void forceEntity(World* world, Entity er, float x, float y, float z) {
+		auto ea = accessEntity(world,er);
+		WorldLogic.forceEntity(world,ea, (vec3f(x,y,z)*256).vecCast!int);
+		doneAccessingEntity(world,ea);
 	}
 	
-	float[3]* getEntityPos(World* world, EntityRef rer, EntityRef er) {
+	float[3]* getEntityPos(World* world, Entity rer, Entity er) {
 		return [((world.entities[er].pos - world.entities[rer].pos) / 256).ffiVec!float].ptr;
 	}
 	
-	void doEntities(World* world, void function(EntityRef) callback) {
-		foreach (EntityRef i, e; world.entities) {
+	void doEntities(World* world, void function(Entity) callback) {
+		foreach (Entity i, e; world.entities) {
 			callback(i);
 		}
 	}

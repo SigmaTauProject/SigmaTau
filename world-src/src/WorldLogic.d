@@ -19,19 +19,23 @@ enum EntityType : int {
 	Ship	,
 	Missile	,
 }
-public
+public// private members & construction
 struct World {
 	Entity*[] entities;
 }
-public
+private
 struct Entity {
 	EntityType type;
 	vec3i pos;
 	vec3i vel;
 }
 
+private
 alias EntityRef = size_t;
-
+public
+struct EntityAccess {
+	size_t er;
+}
 
 public
 World* newWorld() {
@@ -52,17 +56,31 @@ void delegate() worldThread(World* world) {
 }
 
 public
-EntityRef addEntity(World* world, Entity* entity) {
-	world.entities ~= entity;
-	return world.entities.length-1;
+EntityAccess accessEntity(World* world, EntityRef er) {
+	"access".writeln(er);
+	return EntityAccess(er);
 }
 public
-void moveEntity(World* world, EntityRef er, vec3i a) {
-	world.entities[er].pos += a;
+void doneAccessingEntity(World* world, EntityAccess ea) {
+	"done access".writeln(ea);
+}
+
+public
+EntityRef createEntity(World* world, EntityType type, vec3i pos, vec3i vel=vec3i(0,0,0)) {
+	EntityRef addEntity(World* world, Entity* entity) {
+		world.entities ~= entity;
+		return world.entities.length-1;
+	}
+	return addEntity(world, new Entity(type,pos,vel));
+}
+
+public
+void moveEntity(World* world, EntityAccess ea, vec3i a) {
+	world.entities[ea.er].pos += a;
 }
 public
-void forceEntity(World* world, EntityRef er, vec3i a) {
-	world.entities[er].vel += a;
+void forceEntity(World* world, EntityAccess ea, vec3i a) {
+	world.entities[ea.er].vel += a;
 }
 
 
