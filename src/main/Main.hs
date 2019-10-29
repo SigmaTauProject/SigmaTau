@@ -47,7 +47,7 @@ main = withDRuntime $ do
 	----sequence_ $ atomically <$> (writeTChan msgChan <$> (decode $ encode $ upMsg $ msgContentAdjustThruster $ adjustThruster (Just 0) (Just (-8))))
 	
 	
-	forever (threadDelay 1000>>ship)
+	forever (threadDelay 50000>>updateWorld world>>ship)
 
 
 
