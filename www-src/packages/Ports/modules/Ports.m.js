@@ -6,7 +6,7 @@ import {cell} from "/modules/FRP/Cell.m.js";
 export
 class Port {
 	constructor(send, id,type) {
-		this.send = send;
+		this.sendMessage = send;
 		this.id = id;
 		this.type = type;
 	}
@@ -39,7 +39,7 @@ class Wire extends Port {
 			
 			builder.finish(msg);
 			let bytes = builder.asUint8Array();
-			this.send(bytes);
+			this.sendMessage(bytes);
 		}
 	}
 	adjust(amount) {
@@ -62,7 +62,7 @@ class Wire extends Port {
 			
 			builder.finish(msg);
 			let bytes = builder.asUint8Array();
-			this.send(bytes);
+			this.sendMessage(bytes);
 		}
 	}
 }
