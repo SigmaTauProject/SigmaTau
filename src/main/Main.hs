@@ -22,11 +22,12 @@ import Data.Msg.Up as UM
 
 main = do
 	world <- newWorld
-	entity1 <- newEntity world TypeShip (P $ V3 1 1 0)
-	entity2 <- newEntity world TypeShip (P $ V3 10 5 (-21))
-	forceEntity world entity1 (V3 1 0 0)
-	entity2pos <- getEntityPos world entity1 entity2
-	print entity2pos
+	entity1 <- newEntity world TypeShip (P $ V3 1 1 0 * 2^16)
+	newEntity world TypeShip (P $ V3 6 5 (-3) * 2^16)
+	newEntity world TypeShip (P $ V3 9 8 2 * 2^16)
+	newEntity world TypeShip (P $ V3 9 9 10 * 2^16)
+	newEntity world TypeShip (P $ V3 (-1) (-1) 0 * 2^16)
+	forceEntity world entity1 (V3 0.1 0 0)
 	
 	connectionChan <- runTerminalServer
 	
@@ -43,5 +44,7 @@ main = do
 	----sequence_ $ atomically <$> (writeTChan msgChan <$> (decode $ encode $ upMsg $ msgContentAdjustThruster $ adjustThruster (Just 0) (Just (-8))))
 	
 	
-	forever (threadDelay 1000000>>ship)
+	forever (threadDelay 1000>>ship)
+
+
 

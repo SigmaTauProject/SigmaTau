@@ -3,6 +3,7 @@ module World;
 import cst_;
 
 import std.stdio;
+import std.math;
 import core.memory;
 import std.algorithm;
 import std.range;
@@ -39,14 +40,14 @@ extern(C) export {
 	}
 	void forceEntity(World* world, Entity er, float x, float y, float z) {
 		withEntity(world,er,(ea){
-			WorldLogic.forceEntity(world,ea, (vec3f(x,y,z)*256).vecCast!int);
+			WorldLogic.forceEntity(world,ea, (vec3f(x,y,z)*pow(2,16)).vecCast!int);
 		});
 	}
 	
 	float[3]* getEntityPos(World* world, Entity rer, Entity er) {
 		// TODO: Fix this, deadlocking is theoretically possable.  Should not hold a mutex while reaching for another.
 		return withEntity(world,rer,(rea)=>withEntity(world,er,(ea){
-			return [((WorldLogic.getEntityPos(world,rea) - WorldLogic.getEntityPos(world,ea)) / 256).ffiVec!float].ptr;
+			return [((WorldLogic.getEntityPos(world,ea) - WorldLogic.getEntityPos(world,rea)) / pow(2,16)).ffiVec!float].ptr;
 		}));
 	}
 	
