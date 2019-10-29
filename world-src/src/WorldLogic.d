@@ -64,6 +64,12 @@ public
 void doneAccessingEntity(World* world, EntityAccess ea) {
 	"done access".writeln(ea);
 }
+public
+T withEntity(T)(World* world, EntityRef er, T delegate(EntityAccess) callback) {
+	auto ea = accessEntity(world, er);
+	callback(ea);
+	doneAccessingEntity(world, ea);
+}
 
 public
 EntityRef createEntity(World* world, EntityType type, vec3i pos, vec3i vel=vec3i(0,0,0)) {

@@ -33,14 +33,14 @@ extern(C) export {
 		return WorldLogic.createEntity(world, type, vec3i(x,y,z)).cst!Entity;
 	}
 	void moveEntity(World* world, Entity er, int x, int y, int z) {
-		auto ea = accessEntity(world,er);
-		WorldLogic.moveEntity(world,ea,vec3i(x,y,z));
-		doneAccessingEntity(world,ea);
+		withEntity(world,er,(ea){
+			WorldLogic.moveEntity(world,ea,vec3i(x,y,z));
+		});
 	}
 	void forceEntity(World* world, Entity er, float x, float y, float z) {
-		auto ea = accessEntity(world,er);
-		WorldLogic.forceEntity(world,ea, (vec3f(x,y,z)*256).vecCast!int);
-		doneAccessingEntity(world,ea);
+		withEntity(world,er,(ea){
+			WorldLogic.forceEntity(world,ea, (vec3f(x,y,z)*256).vecCast!int);
+		});
 	}
 	
 	float[3]* getEntityPos(World* world, Entity rer, Entity er) {
