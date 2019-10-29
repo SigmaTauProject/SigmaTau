@@ -55,15 +55,30 @@ void delegate() worldThread(World* world) {
 	};
 }
 
+/**	Gain mutexed, multithreaded access to an entity.
+	Must call `doneAccessingEntity` to release.
+	Release as quick as possable, as it is holding off other threads.
+	`withEntity` is recomened inplace of this when possable.
+*/
 public
 EntityAccess accessEntity(World* world, EntityRef er) {
 	"access".writeln(er);
 	return EntityAccess(er);
 }
+
+/**	Release mutexed access to entity.
+	The `EntityAccess` must NOT be used after this call.
+*/
 public
 void doneAccessingEntity(World* world, EntityAccess ea) {
 	"done access".writeln(ea);
 }
+
+/**	Mutexed, multithreaded access to an entity.
+	This automatically releases.
+	Keep the callback as quick as possable, as it is holding off other threads.
+	This is recomended over using `accessEntity`.
+*/
 public
 T withEntity(T)(World* world, EntityRef er, T delegate(EntityAccess) callback) {
 	auto ea = accessEntity(world, er);
