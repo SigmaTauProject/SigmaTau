@@ -86,8 +86,8 @@ void doneAccessingEntity(World* world, EntityAccess ea) {
 public
 T withEntity(T)(World* world, EntityRef er, T delegate(EntityAccess) callback) {
 	auto ea = accessEntity(world, er);
-	callback(ea);
-	doneAccessingEntity(world, ea);
+	scope(exit) doneAccessingEntity(world, ea);
+	return callback(ea);
 }
 
 public
