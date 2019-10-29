@@ -6,7 +6,7 @@ import {cell} from "/modules/FRP/Cell.m.js";
 export
 class Port {
 	constructor(send, id,type) {
-		this.send = send;
+		this.sendMessage = send;
 		this.id = id;
 		this.type = type;
 	}
@@ -39,7 +39,7 @@ class Wire extends Port {
 			
 			builder.finish(msg);
 			let bytes = builder.asUint8Array();
-			this.send(bytes);
+			this.sendMessage(bytes);
 		}
 	}
 	adjust(amount) {
@@ -62,10 +62,30 @@ class Wire extends Port {
 			
 			builder.finish(msg);
 			let bytes = builder.asUint8Array();
-			this.send(bytes);
+			this.sendMessage(bytes);
 		}
 	}
 }
+
+export
+class LA extends Port { // Location Array
+	constructor(send, id) {
+		super(send, id,"la");
+		this.locations = [];
+	}
+	receiveMessage(bytes) {
+		let msg = Msg.Down.DownMsg.getRootAsDownMsg(new flatbuffers.ByteBuffer(bytes));
+		let updateMsg = msg.content(new Msg.Down.LAUpdate());
+		let locations = [];
+		for (let i=0; i<updateMsg.valuesLength(); i++) {
+			let vec3 = updateMsg.values(i);
+			locations.push([vec3.x(),vec3.y(),vec3.z()]);
+		}
+		this.locations = locations;
+		console.log(this.locations);
+	}
+}
+
 
 export
 function portBuilder(send) {
@@ -73,7 +93,9 @@ function portBuilder(send) {
 	let ports = [];
 	let ob = {};
 	ob.done = () => ports;
+	ob.ref = (f) => f(ports[ports.length-1]);
 	ob.wire = () => {ports.push(new Wire(send,nextID++)); return ob;};
+	ob.la = () => {ports.push(new LA(send,nextID++)); return ob;};
 	return ob;
 }
 
