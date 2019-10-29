@@ -5,6 +5,7 @@ import cst_;
 import std.stdio;
 import core.time;
 import core.thread;
+import core.sync.mutex;
 import std.algorithm;
 import std.range;
 
@@ -25,6 +26,7 @@ struct World {
 }
 private
 struct Entity {
+	Mutex mutex;
 	EntityType type;
 	vec3i pos;
 	vec3i vel;
@@ -49,7 +51,9 @@ void delegate() worldThread(World* world) {
 		while (true) {
 			Thread.sleep(50.msecs);
 			foreach (i,e; world.entities) {
-				e.pos += e.vel;
+				withEntity(world,i,(_){
+					e.pos += e.vel;
+				});
 			}
 		}
 	};
@@ -62,7 +66,7 @@ void delegate() worldThread(World* world) {
 */
 public
 EntityAccess accessEntity(World* world, EntityRef er) {
-	"access".writeln(er);
+	world.entities[er].mutex.lock();
 	return EntityAccess(er);
 }
 
@@ -71,7 +75,7 @@ EntityAccess accessEntity(World* world, EntityRef er) {
 */
 public
 void doneAccessingEntity(World* world, EntityAccess ea) {
-	"done access".writeln(ea);
+	world.entities[ea.er].mutex.unlock();
 }
 
 /**	Mutexed, multithreaded access to an entity.
@@ -89,10 +93,11 @@ T withEntity(T)(World* world, EntityRef er, T delegate(EntityAccess) callback) {
 public
 EntityRef createEntity(World* world, EntityType type, vec3i pos, vec3i vel=vec3i(0,0,0)) {
 	EntityRef addEntity(World* world, Entity* entity) {
+		// TODO: Fix this, it is still unsafe, as `world.entities` is not mutex locked.
 		world.entities ~= entity;
 		return world.entities.length-1;
 	}
-	return addEntity(world, new Entity(type,pos,vel));
+	return addEntity(world, new Entity(new Mutex(),type,pos,vel));
 }
 
 public
