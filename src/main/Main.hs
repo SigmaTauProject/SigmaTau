@@ -7,6 +7,8 @@ import Linear.V3
 import Control.Monad (forever)
 import Control.Concurrent (threadDelay)
 
+import DRuntime
+
 import World
 import Ship
 
@@ -20,14 +22,15 @@ import Network.TerminalConnection
 import FlatBuffers
 import Data.Msg.Up as UM
 
-main = do
+
+main = withDRuntime $ do
 	world <- newWorld
-	entity1 <- newEntity world TypeShip (P $ V3 1 1 0 * 2^16)
-	newEntity world TypeShip (P $ V3 6 5 (-3) * 2^16)
-	newEntity world TypeShip (P $ V3 9 8 2 * 2^16)
-	newEntity world TypeShip (P $ V3 9 9 10 * 2^16)
-	newEntity world TypeShip (P $ V3 (-1) (-1) 0 * 2^16)
-	forceEntity world entity1 (V3 0.1 0 0)
+	entity1 <- newEntity world TypeShip (P $ V3 (-50) 1 0)
+	newEntity world TypeShip (P $ V3 6 5 (-3))
+	newEntity world TypeShip (P $ V3 9 8 2)
+	newEntity world TypeShip (P $ V3 9 9 10)
+	newEntity world TypeShip (P $ V3 (-1) (-1) 0)
+	forceEntity world entity1 (V3 10 0 0)
 	
 	connectionChan <- runTerminalServer
 	
@@ -45,6 +48,9 @@ main = do
 	
 	
 	forever (threadDelay 1000>>ship)
+
+
+
 
 
 

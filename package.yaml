@@ -14,6 +14,14 @@ dependencies:
 
 internal-libraries:
   #---General
+  druntime:
+    source-dirs: src-general/druntime
+    exposed-modules:
+      - DRuntime
+    dependencies: []
+    extra-libraries:
+      - druntime
+      - phobos2
   lifetime:
     source-dirs: src-general/lifetime
     exposed-modules:
@@ -69,8 +77,6 @@ internal-libraries:
       - vector
     extra-lib-dirs: []
     extra-libraries:
-      - druntime
-      - phobos2
       - sigmatauworld
   #---Ship
   ship:
@@ -92,6 +98,7 @@ executable:
   main: Main.hs
   source-dirs: src/main
   dependencies:
+    - druntime
     - world
     - ship
     - stm
