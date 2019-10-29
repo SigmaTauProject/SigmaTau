@@ -55,7 +55,7 @@ startNetworking();
 let laPort;
 let iframe = div("iframe");
 document.body.appendChild(iframe);
-iframe.contentDocument.body.parentElement.replaceChild(
+setTimeout(()=>iframe.contentDocument.body.parentElement.replaceChild(
 	makeLayout(	portBuilder(send)
 		.wire()
 		.wire()
@@ -63,7 +63,7 @@ iframe.contentDocument.body.parentElement.replaceChild(
 		.done()
 	),
 	iframe.contentDocument.body
-);
+));
 ////iframe.contentDocument.bodyj.appendChild(controls);
 ////document.body.appendChild(iframe);
 ////
