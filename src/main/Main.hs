@@ -27,9 +27,6 @@ main = do
 	forceEntity world entity1 (V3 1 0 0)
 	entity2pos <- getEntityPos world entity1 entity2
 	print entity2pos
-	updateWorld world
-	entity2pos <- getEntityPos world entity1 entity2
-	print entity2pos
 	
 	connectionChan <- runTerminalServer
 	
@@ -46,5 +43,5 @@ main = do
 	----sequence_ $ atomically <$> (writeTChan msgChan <$> (decode $ encode $ upMsg $ msgContentAdjustThruster $ adjustThruster (Just 0) (Just (-8))))
 	
 	
-	forever (threadDelay 1000000>>updateWorld world>>ship)
+	forever (threadDelay 1000000>>ship)
 

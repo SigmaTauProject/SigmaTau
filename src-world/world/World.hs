@@ -29,7 +29,6 @@ data EntityType = TypeAsteroid | TypeStation | TypeShip | TypeMissile
 
 foreign import ccall "newWorld" newWorldFFI :: IO (Ptr ())
 foreign import ccall "&destroyWorld" destroyWorldFFIPtr :: FunPtr (Ptr () -> IO())
-foreign import ccall "updateWorld" updateWorldFFI :: Ptr() -> IO ()
 foreign import ccall "newEntity" newEntityFFI :: Ptr() -> Int32 -> Int32 -> Int32 -> Int32 -> IO (ERefFFI)
 foreign import ccall "moveEntity" moveEntityFFI :: Ptr() -> ERefFFI -> Int32 -> Int32 -> Int32 -> IO ()
 foreign import ccall "forceEntity" forceEntityFFI :: Ptr() -> ERefFFI -> CFloat -> CFloat -> CFloat -> IO ()
@@ -44,9 +43,6 @@ newWorld :: IO World
 newWorld = do
 	world <- newWorldFFI
 	World <$> newForeignPtr destroyWorldFFIPtr world
-
-updateWorld :: World -> IO ()
-updateWorld (World world) = withForeignPtr world (\w->updateWorldFFI w)
 
 newEntity :: World -> EntityType -> Point V3 Int32 -> IO EntityRef
 newEntity (World world) entityType (P (V3 x y z)) = EntityRef <$> withForeignPtr world (\w->newEntityFFI w (fromIntegral $ fromEnum entityType) x y z)
