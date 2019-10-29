@@ -1,4 +1,5 @@
-export function div (type,...args) {
+
+export function divNS(ns, type, ...args) {
 	var el =document.createElement(type);
 	var refFunctions = [];
 	handleArgs(args);
@@ -59,6 +60,13 @@ export function div (type,...args) {
 		}
 	}
 	return el;
+}
+
+export function div(type, ...args) {
+	return divNS("http://www.w3.org/1999/xhtml", type, ...args);
+}
+export function svg(type, ...args) {
+	return divNS("http://www.w3.org/2000/svg", type, ...args);
 }
 
 
