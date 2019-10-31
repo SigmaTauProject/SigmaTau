@@ -100,11 +100,23 @@ function portBuilder(send) {
 }
 
 
-function networkFloat(value,bits,signed=true,value100=1) {
-	value = Math.min(value100,Math.max(signed?-value100:0,value));
+function networkFloat(value,bits,signed=true) {
+	value = Math.min(value100,Math.max(signed?-1:0,value));
+	return Math.trunc(value*maxBound(bits,signed));
+}
+function unnetworkFloat(value,bits,signed=true) {
+	value = value / maxBound(bits,signed);
+	return Math.min(1,Math.max(signed?-1:0,value));
+}
+function maxBound(bits,signed=true) {
 	if (signed)
-		value = Math.trunc(value*(Math.pow(2,bits)/2-1));
+		return Math.pow(2,bits)/2-1;
 	else
-		value = Math.trunc(value*(Math.pow(2,bits)-1));
-	return value;
+		return Math.pow(2,bits)-1;
+}
+function minBound(bits,signed=true) {
+	if (signed)
+		return -Math.pow(2,bits)/2;
+	else
+		return -Math.pow(2,bits);
 }
