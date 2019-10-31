@@ -86,6 +86,35 @@ class LA extends Port { // Location Array
 	}
 }
 
+export
+class HackEV extends Port { // Hack Entity View
+	constructor(send, id) {
+		super(send, id,"hackEV");
+		this.entities = [];
+	}
+	receiveMessage(bytes) {
+		let msg = Msg.Down.DownMsg.getRootAsDownMsg(new flatbuffers.ByteBuffer(bytes));
+		let updateMsg = msg.content(new Msg.Down.HackEVUpdate());
+		let entities = [];
+		for (let i=0; i<updateMsg.entitiesLength(); i++) {
+			let entity = updateMsg.entities(i);
+			entities.push(	{ pos	:	[ entity.pos().x()
+						, entity.pos().y()
+						, entity.pos().z()
+						]
+				, ori	:	[ entity.ori().a()
+						, entity.ori().b()
+						, entity.ori().c()
+						, entity.ori().d()
+						].map(v=>unnetworkFloat(v,8,true))
+				, meshID	:entity.mesh()
+				});
+		}
+		this.entities = entities;
+		console.log(this.entities);
+	}
+}
+
 
 export
 function portBuilder(send) {
@@ -96,6 +125,7 @@ function portBuilder(send) {
 	ob.ref = (f) => {f(ports[ports.length-1]); return ob;};
 	ob.wire = () => {ports.push(new Wire(send,nextID++)); return ob;};
 	ob.la = () => {ports.push(new LA(send,nextID++)); return ob;};
+	ob.hackEV = () => {ports.push(new HackEV(send,nextID++)); return ob;};
 	return ob;
 }
 

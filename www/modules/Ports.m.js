@@ -86,6 +86,35 @@ class LA extends Port { // Location Array
 	}
 }
 
+export
+class HackEV extends Port { // Hack Entity View
+	constructor(send, id) {
+		super(send, id,"hackEV");
+		this.entities = [];
+	}
+	receiveMessage(bytes) {
+		let msg = Msg.Down.DownMsg.getRootAsDownMsg(new flatbuffers.ByteBuffer(bytes));
+		let updateMsg = msg.content(new Msg.Down.HackEVUpdate());
+		let entities = [];
+		for (let i=0; i<updateMsg.entitiesLength(); i++) {
+			let entity = updateMsg.entities(i);
+			entities.push(	{ pos	:	[ entity.pos().x()
+						, entity.pos().y()
+						, entity.pos().z()
+						]
+				, ori	:	[ entity.ori().a()
+						, entity.ori().b()
+						, entity.ori().c()
+						, entity.ori().d()
+						].map(v=>unnetworkFloat(v,8,true))
+				, meshID	:entity.mesh()
+				});
+		}
+		this.entities = entities;
+		console.log(this.entities);
+	}
+}
+
 
 export
 function portBuilder(send) {
@@ -96,15 +125,28 @@ function portBuilder(send) {
 	ob.ref = (f) => {f(ports[ports.length-1]); return ob;};
 	ob.wire = () => {ports.push(new Wire(send,nextID++)); return ob;};
 	ob.la = () => {ports.push(new LA(send,nextID++)); return ob;};
+	ob.hackEV = () => {ports.push(new HackEV(send,nextID++)); return ob;};
 	return ob;
 }
 
 
-function networkFloat(value,bits,signed=true,value100=1) {
-	value = Math.min(value100,Math.max(signed?-value100:0,value));
+function networkFloat(value,bits,signed=true) {
+	value = Math.min(value100,Math.max(signed?-1:0,value));
+	return Math.trunc(value*maxBound(bits,signed));
+}
+function unnetworkFloat(value,bits,signed=true) {
+	value = value / maxBound(bits,signed);
+	return Math.min(1,Math.max(signed?-1:0,value));
+}
+function maxBound(bits,signed=true) {
 	if (signed)
-		value = Math.trunc(value*(Math.pow(2,bits)/2-1));
+		return Math.pow(2,bits)/2-1;
 	else
-		value = Math.trunc(value*(Math.pow(2,bits)-1));
-	return value;
+		return Math.pow(2,bits)-1;
+}
+function minBound(bits,signed=true) {
+	if (signed)
+		return -Math.pow(2,bits)/2;
+	else
+		return -Math.pow(2,bits);
 }

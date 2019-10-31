@@ -46,7 +46,15 @@ newShip world networkConnection = do
 			)
 		
 		rawEntities <- mapEntities world (getEntityPos world entity)
-		let entitiesMsg = downMsg $ msgContentLAUpdate $ lAUpdate $ Just $ FB.fromList' $ fmap (toNetVec . unP) $ rawEntities
+		let entitiesMsg	= downMsg
+			$ msgContentHackEVUpdate $ hackEVUpdate
+			$ Just $ FB.fromList'
+			$ fmap (\pos->hackEVEntity
+					(Just $ toNetVec $ unP pos)
+					(Just $ quaternion (networkFloat 1) 0 0 0)
+					(Just $ 0)
+				)
+			$ rawEntities
 		withAll activeConnections (\con@(Connection chan downMsgChan)->do
 				forTChan chan (\msg->sequence_ $ do
 						content <- upMsgContent msg
