@@ -13,23 +13,13 @@ var Msg = Msg || {};
 Msg.Down = Msg.Down || {};
 
 /**
- * @enum {number}
+ * @enum
  */
 Msg.Down.MsgContent = {
   NONE: 0,
   LAUpdate: 1,
   HackEVMesh: 2,
   HackEVUpdate: 3
-};
-
-/**
- * @enum {string}
- */
-Msg.Down.MsgContentName = {
-  0: 'NONE',
-  1: 'LAUpdate',
-  2: 'HackEVMesh',
-  3: 'HackEVUpdate'
 };
 
 /**
@@ -251,17 +241,6 @@ Msg.Down.LAUpdate.endLAUpdate = function(builder) {
 };
 
 /**
- * @param {flatbuffers.Builder} builder
- * @param {flatbuffers.Offset} valuesOffset
- * @returns {flatbuffers.Offset}
- */
-Msg.Down.LAUpdate.createLAUpdate = function(builder, valuesOffset) {
-  Msg.Down.LAUpdate.startLAUpdate(builder);
-  Msg.Down.LAUpdate.addValues(builder, valuesOffset);
-  return Msg.Down.LAUpdate.endLAUpdate(builder);
-}
-
-/**
  * @constructor
  */
 Msg.Down.HackEVMesh = function() {
@@ -383,19 +362,6 @@ Msg.Down.HackEVMesh.endHackEVMesh = function(builder) {
 };
 
 /**
- * @param {flatbuffers.Builder} builder
- * @param {number} id
- * @param {flatbuffers.Offset} meshOffset
- * @returns {flatbuffers.Offset}
- */
-Msg.Down.HackEVMesh.createHackEVMesh = function(builder, id, meshOffset) {
-  Msg.Down.HackEVMesh.startHackEVMesh(builder);
-  Msg.Down.HackEVMesh.addId(builder, id);
-  Msg.Down.HackEVMesh.addMesh(builder, meshOffset);
-  return Msg.Down.HackEVMesh.endHackEVMesh(builder);
-}
-
-/**
  * @constructor
  */
 Msg.Down.HackEVEntity = function() {
@@ -497,21 +463,6 @@ Msg.Down.HackEVEntity.endHackEVEntity = function(builder) {
 };
 
 /**
- * @param {flatbuffers.Builder} builder
- * @param {flatbuffers.Offset} posOffset
- * @param {flatbuffers.Offset} oriOffset
- * @param {number} mesh
- * @returns {flatbuffers.Offset}
- */
-Msg.Down.HackEVEntity.createHackEVEntity = function(builder, posOffset, oriOffset, mesh) {
-  Msg.Down.HackEVEntity.startHackEVEntity(builder);
-  Msg.Down.HackEVEntity.addPos(builder, posOffset);
-  Msg.Down.HackEVEntity.addOri(builder, oriOffset);
-  Msg.Down.HackEVEntity.addMesh(builder, mesh);
-  return Msg.Down.HackEVEntity.endHackEVEntity(builder);
-}
-
-/**
  * @constructor
  */
 Msg.Down.HackEVUpdate = function() {
@@ -610,17 +561,6 @@ Msg.Down.HackEVUpdate.endHackEVUpdate = function(builder) {
 };
 
 /**
- * @param {flatbuffers.Builder} builder
- * @param {flatbuffers.Offset} entitiesOffset
- * @returns {flatbuffers.Offset}
- */
-Msg.Down.HackEVUpdate.createHackEVUpdate = function(builder, entitiesOffset) {
-  Msg.Down.HackEVUpdate.startHackEVUpdate(builder);
-  Msg.Down.HackEVUpdate.addEntities(builder, entitiesOffset);
-  return Msg.Down.HackEVUpdate.endHackEVUpdate(builder);
-}
-
-/**
  * @constructor
  */
 Msg.Down.DownMsg = function() {
@@ -711,19 +651,6 @@ Msg.Down.DownMsg.endDownMsg = function(builder) {
 Msg.Down.DownMsg.finishDownMsgBuffer = function(builder, offset) {
   builder.finish(offset);
 };
-
-/**
- * @param {flatbuffers.Builder} builder
- * @param {Msg.Down.MsgContent} contentType
- * @param {flatbuffers.Offset} contentOffset
- * @returns {flatbuffers.Offset}
- */
-Msg.Down.DownMsg.createDownMsg = function(builder, contentType, contentOffset) {
-  Msg.Down.DownMsg.startDownMsg(builder);
-  Msg.Down.DownMsg.addContentType(builder, contentType);
-  Msg.Down.DownMsg.addContent(builder, contentOffset);
-  return Msg.Down.DownMsg.endDownMsg(builder);
-}
 
 // Exports for Node.js and RequireJS
 this.Msg = Msg;
