@@ -70,10 +70,10 @@ function hackEV3DView(hackEVPort) {
 	if (!gl) gl = canvas.getContext("experimental-webgl");
 	const programInfo = twgl.createProgramInfo(gl,
 		[`	
-uniform mat4 u_worldViewProjection;
+uniform mat4 worldViewProjection;
 attribute vec4 position;
 void main() {
-	gl_Position = u_worldViewProjection * position;
+	gl_Position = worldViewProjection * position;
 }
 		`,
 		`
@@ -121,11 +121,11 @@ void main() {
 		const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
 		const zNear = 0.5;
 		const zFar = 10;
-		const projection = mat4.perspective(mat4.create(), fov, aspect, zNear, zFar);
+		////const projection = mat4.perspective(mat4.create(), fov, aspect, zNear, zFar);
+		const projection = mat4.mul(mat4.create(), mat4.perspective(mat4.create(), fov, aspect, zNear, zFar), new Float32Array([0,0,-1,0, 1,0,0,0, 0,1,0,0, 0,0,0,1]));
 		const eye = vec3.fromValues(1, -6, 4);
 		const target = vec3.fromValues(0, 0, 0);
 		const up = vec3.fromValues(0, 0, 1);
-		const world = mat4.fromZRotation(mat4.create(),time);
 		////const view = mat4.lookAt(mat4.create(), eye, target, up);
 		////const view = mat4.rotateY(mat4.create(), mat4.fromTranslation(mat4.create(),vec3.fromValues(6,0,-1)), Math.PI);
 		////const view = mat4.translate(mat4.create(), mat4.fromYRotation(mat4.create(), -Math.PI/16), vec3.fromValues(6,0,-2));
@@ -133,166 +133,19 @@ void main() {
 			, mat4.fromYRotation(mat4.create(), -Math.PI/6)
 			, mat4.fromTranslation(mat4.create(), vec3.fromValues(6,0,-4))
 			);
-		const viewProjection = mat4.mul(mat4.create(), mat4.mul(mat4.create(), projection, new Float32Array([0,0,-1,0, 1,0,0,0, 0,1,0,0, 0,0,0,1])), view);
-		uniforms.u_worldViewProjection = mat4.mul(mat4.create(), viewProjection, world);
 		gl.useProgram(programInfo.program);
-		twgl.setBuffersAndAttributes(gl, programInfo, bufferInfo);
-		twgl.setUniforms(programInfo, uniforms);
-		gl.drawElements(gl.TRIANGLES, bufferInfo.numElements, gl.UNSIGNED_SHORT, 0);
+		for (let entity of hackEVPort.entities) {
+			////const world = mat4.fromZRotation(mat4.create(),time);
+			const world = mat4.fromTranslation(mat4.create(),vec3.fromValues(entity.pos[0],entity.pos[1],0));
+			const viewProjection = mat4.mul(mat4.create(), mat4.mul(mat4.create(), projection, mat4.fromZRotation(mat4.create(),time)),view);
+			uniforms.worldViewProjection = mat4.mul(mat4.create(), viewProjection, world);
+			twgl.setBuffersAndAttributes(gl, programInfo, bufferInfo);
+			twgl.setUniforms(programInfo, uniforms);
+			gl.drawElements(gl.TRIANGLES, bufferInfo.numElements, gl.UNSIGNED_SHORT, 0);
+		}
 		requestAnimationFrame(render);
 	}
 	requestAnimationFrame(render);
-	
-	////const shipMesh = {
-	////	position:	[ 1	, 0	, 0
-	////		, -1	, 0	, 0.5
-	////		, -1	, 0.75	, 0
-	////		, 1	, 0	, 0
-	////		, -1	, -0.5	, 0
-	////		,-1	,0	,0.5
-	////		],
-	////};
-	////const bufferInfo = twgl.createBufferInfoFromArrays(gl, shipMesh);
-	////
-	////var mat = mat4.identity(mat4.create());
-	////mat4.scale(mat,mat,[0.5,0.5,0.5]);
-	////
-	////var viewMat = mat4.identity(mat4.create());
-	////mat4.translate(mat,mat,[-2,0,0]);
-	////mat4.rotate(mat,mat,Math.PI,[0,0,1]);
-	////
-	////var projMat = mat4.identity(mat4.create());
-	////mat4.perspective(projMat, 90, 1, 1, 1000);
-	////
-	////var worldViewMat = mat4.create();
-	////
-	////function render(time) {
-	////	twgl.resizeCanvasToDisplaySize(gl.canvas);
-	////	gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-	////	
-	////	mat4.mul(worldViewMat, projMat,viewMat,mat);
-	////	console.log(worldViewMat);
-	////	
-	////	const uniforms = {
-	////		transformMatrix: worldViewMat,
-	////	};
-	////	
-	////	gl.useProgram(programInfo.program);
-	////	twgl.setBuffersAndAttributes(gl, programInfo, bufferInfo);
-	////	twgl.setUniforms(programInfo, uniforms);
-	////	twgl.drawBufferInfo(gl, gl.TRIANGLES, bufferInfo);
-	////	
-	////	requestAnimationFrame(render);
-	////}
-	////requestAnimationFrame(render);
-	
-	////var boxVertices = 
-	////[ // X, Y, Z           R, G, B
-	////	// Top
-	////	-1.0, 1.0, -1.0,   0.5, 0.5, 0.5,
-	////	-1.0, 1.0, 1.0,    0.5, 0.5, 0.5,
-	////	1.0, 1.0, 1.0,     0.5, 0.5, 0.5,
-	////	1.0, 1.0, -1.0,    0.5, 0.5, 0.5,
-////
-	////	// Left
-	////	-1.0, 1.0, 1.0,    0.75, 0.25, 0.5,
-	////	-1.0, -1.0, 1.0,   0.75, 0.25, 0.5,
-	////	-1.0, -1.0, -1.0,  0.75, 0.25, 0.5,
-	////	-1.0, 1.0, -1.0,   0.75, 0.25, 0.5,
-////
-	////	// Right
-	////	1.0, 1.0, 1.0,    0.25, 0.25, 0.75,
-	////	1.0, -1.0, 1.0,   0.25, 0.25, 0.75,
-	////	1.0, -1.0, -1.0,  0.25, 0.25, 0.75,
-	////	1.0, 1.0, -1.0,   0.25, 0.25, 0.75,
-////
-	////	// Front
-	////	1.0, 1.0, 1.0,    1.0, 0.0, 0.15,
-	////	1.0, -1.0, 1.0,    1.0, 0.0, 0.15,
-	////	-1.0, -1.0, 1.0,    1.0, 0.0, 0.15,
-	////	-1.0, 1.0, 1.0,    1.0, 0.0, 0.15,
-////
-	////	// Back
-	////	1.0, 1.0, -1.0,    0.0, 1.0, 0.15,
-	////	1.0, -1.0, -1.0,    0.0, 1.0, 0.15,
-	////	-1.0, -1.0, -1.0,    0.0, 1.0, 0.15,
-	////	-1.0, 1.0, -1.0,    0.0, 1.0, 0.15,
-////
-	////	// Bottom
-	////	-1.0, -1.0, -1.0,   0.5, 0.5, 1.0,
-	////	-1.0, -1.0, 1.0,    0.5, 0.5, 1.0,
-	////	1.0, -1.0, 1.0,     0.5, 0.5, 1.0,
-	////	1.0, -1.0, -1.0,    0.5, 0.5, 1.0,
-	////];
-////
-	////var boxIndices =
-	////[
-	////	// Top
-	////	0, 1, 2,
-	////	0, 2, 3,
-	////	
-	////	// Left
-	////	5, 4, 6,
-	////	6, 4, 7,
-	////	
-	////	// Right
-	////	8, 9, 10,
-	////	8, 10, 11,
-	////	
-	////	// Front
-	////	13, 12, 14,
-	////	15, 14, 12,
-	////	
-	////	// Back
-	////	16, 17, 18,
-	////	16, 18, 19,
-	////	
-	////	// Bottom
-	////	21, 20, 22,
-	////	22, 20, 23
-	////];
-	////
-	////const bufferInfo = twgl.createBufferInfoFromArrays(gl, {position:boxVertices, indices:boxIndices});
-	////
-	////var worldMat = mat4.create();
-	////var viewMat = mat4.create();
-	////var projMat = mat4.create();
-	////mat4.identity(worldMat);
-	////mat4.lookAt(viewMat, [0, 0, -8], [0, 0, 0], [0, 1, 0]);
-	////mat4.perspective(projMat, glMatrix.toRadian(45), canvas.clientWidth / canvas.clientHeight, 0.1, 1000.0);
-////
-	////var xRotationMat = mat4.create();
-	////var yRotationMat = mat4.create();
-////
-	//////
-	////// Main render loop
-	//////
-	////var identityMat = mat4.create();
-	////mat4.identity(identityMat);
-	////var angle = 0;
-	////var loop = function () {
-	////	angle = performance.now() / 1000 / 6 * 2 * Math.PI;
-	////	mat4.rotate(yRotationMat, identityMat, angle, [0, 1, 0]);
-	////	mat4.rotate(xRotationMat, identityMat, angle / 4, [1, 0, 0]);
-	////	mat4.mul(worldMat, yRotationMat, xRotationMat);
-////
-	////	gl.clearColor(0.75, 0.85, 0.8, 1.0);
-	////	gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
-	////	
-	////	const uniforms = {
-	////		worldMat: worldMat,
-	////		viewMat: viewMat,
-	////		projMat: projMat,
-	////	};
-	////	
-	////	gl.useProgram(programInfo.program);
-	////	twgl.setBuffersAndAttributes(gl, programInfo, bufferInfo);
-	////	twgl.setUniforms(programInfo, uniforms);
-	////	twgl.drawBufferInfo(gl, gl.TRIANGLES, bufferInfo);
-	////	
-	////	requestAnimationFrame(loop);
-	////};
-	////requestAnimationFrame(loop);
 	
 	return canvas;
 }

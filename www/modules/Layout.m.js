@@ -70,10 +70,10 @@ function hackEV3DView(hackEVPort) {
 	if (!gl) gl = canvas.getContext("experimental-webgl");
 	const programInfo = twgl.createProgramInfo(gl,
 		[`	
-uniform mat4 u_worldViewProjection;
+uniform mat4 worldViewProjection;
 attribute vec4 position;
 void main() {
-	gl_Position = u_worldViewProjection * position;
+	gl_Position = worldViewProjection * position;
 }
 		`,
 		`
@@ -121,11 +121,11 @@ void main() {
 		const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
 		const zNear = 0.5;
 		const zFar = 10;
-		const projection = mat4.perspective(mat4.create(), fov, aspect, zNear, zFar);
+		////const projection = mat4.perspective(mat4.create(), fov, aspect, zNear, zFar);
+		const projection = mat4.mul(mat4.create(), mat4.perspective(mat4.create(), fov, aspect, zNear, zFar), new Float32Array([0,0,-1,0, 1,0,0,0, 0,1,0,0, 0,0,0,1]));
 		const eye = vec3.fromValues(1, -6, 4);
 		const target = vec3.fromValues(0, 0, 0);
 		const up = vec3.fromValues(0, 0, 1);
-		const world = mat4.fromZRotation(mat4.create(),time);
 		////const view = mat4.lookAt(mat4.create(), eye, target, up);
 		////const view = mat4.rotateY(mat4.create(), mat4.fromTranslation(mat4.create(),vec3.fromValues(6,0,-1)), Math.PI);
 		////const view = mat4.translate(mat4.create(), mat4.fromYRotation(mat4.create(), -Math.PI/16), vec3.fromValues(6,0,-2));
@@ -133,12 +133,16 @@ void main() {
 			, mat4.fromYRotation(mat4.create(), -Math.PI/6)
 			, mat4.fromTranslation(mat4.create(), vec3.fromValues(6,0,-4))
 			);
-		const viewProjection = mat4.mul(mat4.create(), mat4.mul(mat4.create(), projection, new Float32Array([0,0,-1,0, 1,0,0,0, 0,1,0,0, 0,0,0,1])), view);
-		uniforms.u_worldViewProjection = mat4.mul(mat4.create(), viewProjection, world);
 		gl.useProgram(programInfo.program);
-		twgl.setBuffersAndAttributes(gl, programInfo, bufferInfo);
-		twgl.setUniforms(programInfo, uniforms);
-		gl.drawElements(gl.TRIANGLES, bufferInfo.numElements, gl.UNSIGNED_SHORT, 0);
+		for (let entity of hackEVPort.entities) {
+			////const world = mat4.fromZRotation(mat4.create(),time);
+			const world = mat4.fromTranslation(mat4.create(),vec3.fromValues(entity.pos[0],entity.pos[1],0));
+			const viewProjection = mat4.mul(mat4.create(), mat4.mul(mat4.create(), projection, mat4.fromZRotation(mat4.create(),time)),view);
+			uniforms.worldViewProjection = mat4.mul(mat4.create(), viewProjection, world);
+			twgl.setBuffersAndAttributes(gl, programInfo, bufferInfo);
+			twgl.setUniforms(programInfo, uniforms);
+			gl.drawElements(gl.TRIANGLES, bufferInfo.numElements, gl.UNSIGNED_SHORT, 0);
+		}
 		requestAnimationFrame(render);
 	}
 	requestAnimationFrame(render);
