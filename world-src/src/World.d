@@ -46,6 +46,41 @@ extern(C) export {
 			WorldLogic.forceEntity(world,ea, (vec3f(x,y,z)*(pow(2f,16f)/1000f)).vecCast!int);
 		});
 	}
+	void rotateEntity(World* world, Entity er, float w, float x, float y, float z) {
+		withEntity(world,er,(ea){
+			WorldLogic.rotateEntity(world,ea,quatf(w,x,y,z));
+		});
+	}
+	void angularForceEntity(World* world, Entity er, float w, float x, float y, float z) {
+		withEntity(world,er,(ea){
+			WorldLogic.angularForceEntity(world,ea,quatf(w,x,y,z));
+		});
+	}
+	void angularXForceEntity(World* world, Entity er, float a) {
+		withEntity(world,er,(ea){
+			WorldLogic.angularForceEntity(world,ea,quatf.xrotation(a));
+		});
+	}
+	void angularYForceEntity(World* world, Entity er, float a) {
+		withEntity(world,er,(ea){
+			WorldLogic.angularForceEntity(world,ea,quatf.yrotation(a));
+		});
+	}
+	void angularZForceEntity(World* world, Entity er, float a) {
+		withEntity(world,er,(ea){
+			WorldLogic.angularForceEntity(world,ea,quatf.zrotation(a));
+		});
+	}
+	void angularAxisForceEntity(World* world, Entity er, float a, float x, float y, float z) {
+		withEntity(world,er,(ea){
+			WorldLogic.angularForceEntity(world,ea,quatf.axis_rotation(a,vec3f(x,y,z)));
+		});
+	}
+	void angularEulerForceEntity(World* world, Entity er, float yaw, float pitch, float roll) {
+		withEntity(world,er,(ea){
+			WorldLogic.angularForceEntity(world,ea,quatf.euler_rotation(yaw, pitch, roll));
+		});
+	}
 	
 	float[3]* getEntityPos(World* world, Entity rer, Entity er) {
 		// TODO: Fix this, deadlocking is theoretically possable.  Should not hold a mutex while reaching for another.
@@ -64,5 +99,11 @@ extern(C) export {
 	}
 }
 
+
+unittest {
+	auto world = newWorld();
+	newEntity(world, EntityType.Ship, 0, 0, 0);
+	updateWorld(world);
+}
 
 

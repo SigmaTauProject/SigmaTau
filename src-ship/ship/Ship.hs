@@ -36,6 +36,7 @@ newShip :: World -> NetworkConnection -> IO (IO ())
 newShip world networkConnection = do
 	activeConnections <- newLifetimeSet
 	entity <- newEntity world TypeShip (P $ V3 0 0 0)
+	angularXForceEntity world entity 2
 	
 	thrusters <- sequence $ [makeThruster (V3 1 0 0), makeThruster (V3 0 1 0)]
 	

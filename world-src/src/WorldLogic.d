@@ -30,6 +30,8 @@ struct Entity {
 	EntityType type;
 	vec3i pos;
 	vec3i vel;
+	quatf ori;
+	quatf anv;
 	Mutex mutex;
 	MonoTime time;
 }
@@ -62,6 +64,7 @@ void delegate() worldThread(World* world) {
 				withEntity(world,i,(_){
 					e.time = updateTime;
 					e.pos += getDurVel(e.vel,loopDur);
+					e.ori = getDurAnv(e.anv,loopDur) * e.ori;
 				});
 			}
 		}
@@ -104,13 +107,19 @@ T withEntity(T)(World* world, EntityRef er, T delegate(EntityAccess) callback) {
 }
 
 public
-EntityRef createEntity(World* world, EntityType type, vec3i pos, vec3i vel=vec3i(0,0,0)) {
+EntityRef createEntity	( World*	world	
+	, EntityType	type	
+	, vec3i	pos	=vec3i(0,0,0)
+	, quatf	ori	=quatf.identity()
+	, vec3i	vel	=vec3i(0,0,0)
+	, quatf	anv	=quat.identity()
+) {
 	EntityRef addEntity(World* world, Entity* entity) {
 		// TODO: Fix this, it is still unsafe, as `world.entities` is not mutex locked.
 		world.entities ~= entity;
 		return world.entities.length-1;
 	}
-	return addEntity(world, new Entity(type,pos,vel,new Mutex(),world.time));
+	return addEntity(world, new Entity(type,pos,vel,ori,anv,new Mutex(),world.time));
 }
 
 public
@@ -121,10 +130,23 @@ public
 void forceEntity(World* world, EntityAccess ea, vec3i a) {
 	world.entities[ea.er].vel += a;
 }
+public
+void rotateEntity(World* world, EntityAccess ea, quatf a) {
+	world.entities[ea.er].ori = a * world.entities[ea.er].ori;
+}
+public
+void angularForceEntity(World* world, EntityAccess ea, quatf a) {
+	world.entities[ea.er].anv = a * world.entities[ea.er].anv;
+}
 
+public
 vec3i getEntityPos(World* world, EntityAccess ea) {
 	return world.entities[ea.er].pos + getDurVel(world.entities[ea.er].vel, world.time-world.entities[ea.er].time);
 	////return world.entities[ea.er].pos;
+}
+public
+quatf getEntityOri(World* world, EntityAccess ea) {
+	return world.entities[ea.er].ori + getDurAnv(world.entities[ea.er].anv, world.time-world.entities[ea.er].time);
 }
 
 
@@ -132,6 +154,9 @@ vec3i getEntityPos(World* world, EntityAccess ea) {
 private {
 	vec3i getDurVel(vec3i vel, Duration dur) {
 		return vel * dur.total!"msecs".cst!int;
+	}
+	quatf getDurAnv(quatf anv, Duration dur) {
+		return anv * dur.total!"msecs".cst!float;
 	}
 }
 
@@ -147,7 +172,9 @@ public {
 	alias Vec2(Type) = Vector!(Type,2);
 	alias Vec3(Type) = Vector!(Type,3);
 	alias Vec4(Type) = Vector!(Type,4);
-
+	
+	alias quatf = Quaternion!float;
+	
 	Type[L] ffiVec(Type, size_t L)(Vector!(Type,L) xs) {
 		return xs.vector;
 	}
