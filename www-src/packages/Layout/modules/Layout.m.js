@@ -87,10 +87,10 @@ void main() {
 	
 	
 	const arrays = {
-		position:	[ 1	, 0	, 0
+		position:	[1	, 0	, 0
 			, -1	, 1	, 0
-			, -1	, -1	, 0
-			, -1	, 0	, 1
+			, -1	, -0.3	, 0
+			, -1.4	, 0	, 1
 			],
 		indices:	[ 0	, 2	, 1
 			, 0	, 3	, 2
@@ -126,8 +126,14 @@ void main() {
 		const target = vec3.fromValues(0, 0, 0);
 		const up = vec3.fromValues(0, 0, 1);
 		const world = mat4.fromZRotation(mat4.create(),time);
-		const view = mat4.lookAt(mat4.create(), eye, target, up);
-		const viewProjection = mat4.mul(mat4.create, projection, view);
+		////const view = mat4.lookAt(mat4.create(), eye, target, up);
+		////const view = mat4.rotateY(mat4.create(), mat4.fromTranslation(mat4.create(),vec3.fromValues(6,0,-1)), Math.PI);
+		////const view = mat4.translate(mat4.create(), mat4.fromYRotation(mat4.create(), -Math.PI/16), vec3.fromValues(6,0,-2));
+		const view = mat4.mul	( mat4.create()
+			, mat4.fromYRotation(mat4.create(), -Math.PI/6)
+			, mat4.fromTranslation(mat4.create(), vec3.fromValues(6,0,-4))
+			);
+		const viewProjection = mat4.mul(mat4.create(), mat4.mul(mat4.create(), projection, new Float32Array([0,0,-1,0, 1,0,0,0, 0,1,0,0, 0,0,0,1])), view);
 		uniforms.u_worldViewProjection = mat4.mul(mat4.create(), viewProjection, world);
 		gl.useProgram(programInfo.program);
 		twgl.setBuffersAndAttributes(gl, programInfo, bufferInfo);
