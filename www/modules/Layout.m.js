@@ -9,6 +9,8 @@ import {Port,Wire} from "/modules/Ports.m.js";
 export default
 function makeLayout(ports) {
 	return div("body",
+		ports	.filter(p=>p.type=="hackEV")
+			.map(p=>hackEV3DView(p)),
 		ports	.filter(p=>p.type=="la")
 			.map(p=>locationArray(p)),
 		ports	.filter(p=>p.type=="wire")
@@ -62,15 +64,108 @@ function locationArray(laPort) {
 	return svgGui;
 }
 
+function hackEV3DView(hackEVPort) {
+	const canvas = div("canvas", {style:"width:1200px;height:800px;"});
+	const gl = canvas.getContext("webgl");
+	if (!gl) gl = canvas.getContext("experimental-webgl");
+	const programInfo = twgl.createProgramInfo(gl,
+		[`	
+uniform mat4 worldViewProjection;
+attribute vec4 position;
+void main() {
+	gl_Position = worldViewProjection * position;
+}
+		`,
+		`
+void main() {
+	gl_FragColor = vec4(0.7,0.7,0.7,1);
+}
+		`]
+	);
+	
+	gl.clearColor(0,0,0,1);
+	gl.enable(gl.DEPTH_TEST);
+	gl.enable(gl.CULL_FACE);
+	const projection = mat4.mul
+		( mat4.create()
+		, mat4.perspective	( mat4.create()
+			, 90 * Math.PI / 180// FOV
+			////, gl.canvas.clientWidth / gl.canvas.clientHeight// aspect
+			, 1// aspect
+			, 0.1// near
+			, 1000// far
+			)
+		, new Float32Array([0,0,-1,0, 1,0,0,0, 0,1,0,0, 0,0,0,1])
+		);
+	
+	const arrays = {
+		position:	[1	, 0	, 0
+			, -1	, 1	, 0
+			, -1	, -0.3	, 0
+			, -1.4	, 0	, 1
+			],
+		indices:	[ 0	, 2	, 1
+			, 0	, 3	, 2
+			, 0	, 1	, 3
+			, 1	, 2	, 3
+			],
+	};
+	const bufferInfo = twgl.createBufferInfoFromArrays(gl, arrays);
+	const tex = twgl.createTexture(gl, {
+		min: gl.NEAREST,
+		mag: gl.NEAREST,
+		src: [
+			255, 255, 255, 255,
+			192, 192, 192, 255,
+			192, 192, 192, 255,
+			255, 255, 255, 255,
+		],
+	});
+	function render(time) {
+		time *= 0.001;
+		{
+			canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight;
+			gl.viewport(0, 0, canvas.width, canvas.height);
+		}
+		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+		
+		const viewingSize = (canvas.clientWidth + canvas.clientHeight) / 2;
+		const view = mat4.mul	( mat4.create()
+			, mat4.fromScaling(mat4.create(), [1,viewingSize/canvas.clientWidth,viewingSize/canvas.clientHeight])
+			, mat4.mul	( mat4.create()
+				, mat4.fromYRotation(mat4.create(), -Math.PI/2)
+				, mat4.fromTranslation(mat4.create(), vec3.fromValues(0,0,-64))
+				)
+			);
+		gl.useProgram(programInfo.program);
+		for (let entity of hackEVPort.entities) {
+			////const world = mat4.fromZRotation(mat4.create(),time);
+			const world = mat4.fromTranslation(mat4.create(),vec3.fromValues(entity.pos[0],entity.pos[1],0));
+			const viewProjection = mat4.mul(mat4.create(), projection, view);
+			twgl.setUniforms(programInfo, {
+				worldViewProjection : mat4.mul(mat4.create(), viewProjection, world)
+			});
+			twgl.setBuffersAndAttributes(gl, programInfo, bufferInfo);
+			gl.drawElements(gl.TRIANGLES, bufferInfo.numElements, gl.UNSIGNED_SHORT, 0);
+		}
+		requestAnimationFrame(render);
+	}
+	requestAnimationFrame(render);
+	
+	return canvas;
+}
+
 
 class GUIItem {
 	constructor(el) {
 		this.el = el;
 	}
 }
-Object.prototype.escRef = function(f) {
-	f(this);
-	return this;
-}
+Object.defineProperty(Object.prototype, "escRef", {value:
+	function (f) {
+		f(this);
+		return this;
+	}
+});
 
 

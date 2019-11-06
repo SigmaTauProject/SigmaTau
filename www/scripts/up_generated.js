@@ -13,21 +13,12 @@ var Msg = Msg || {};
 Msg.Up = Msg.Up || {};
 
 /**
- * @enum {number}
+ * @enum
  */
 Msg.Up.MsgContent = {
   NONE: 0,
   WireSet: 1,
   WireAdjust: 2
-};
-
-/**
- * @enum {string}
- */
-Msg.Up.MsgContentName = {
-  0: 'NONE',
-  1: 'WireSet',
-  2: 'WireAdjust'
 };
 
 /**
@@ -114,19 +105,6 @@ Msg.Up.WireSet.endWireSet = function(builder) {
 };
 
 /**
- * @param {flatbuffers.Builder} builder
- * @param {number} id
- * @param {number} value
- * @returns {flatbuffers.Offset}
- */
-Msg.Up.WireSet.createWireSet = function(builder, id, value) {
-  Msg.Up.WireSet.startWireSet(builder);
-  Msg.Up.WireSet.addId(builder, id);
-  Msg.Up.WireSet.addValue(builder, value);
-  return Msg.Up.WireSet.endWireSet(builder);
-}
-
-/**
  * @constructor
  */
 Msg.Up.WireAdjust = function() {
@@ -208,19 +186,6 @@ Msg.Up.WireAdjust.endWireAdjust = function(builder) {
   var offset = builder.endObject();
   return offset;
 };
-
-/**
- * @param {flatbuffers.Builder} builder
- * @param {number} id
- * @param {number} value
- * @returns {flatbuffers.Offset}
- */
-Msg.Up.WireAdjust.createWireAdjust = function(builder, id, value) {
-  Msg.Up.WireAdjust.startWireAdjust(builder);
-  Msg.Up.WireAdjust.addId(builder, id);
-  Msg.Up.WireAdjust.addValue(builder, value);
-  return Msg.Up.WireAdjust.endWireAdjust(builder);
-}
 
 /**
  * @constructor
@@ -313,19 +278,6 @@ Msg.Up.UpMsg.endUpMsg = function(builder) {
 Msg.Up.UpMsg.finishUpMsgBuffer = function(builder, offset) {
   builder.finish(offset);
 };
-
-/**
- * @param {flatbuffers.Builder} builder
- * @param {Msg.Up.MsgContent} contentType
- * @param {flatbuffers.Offset} contentOffset
- * @returns {flatbuffers.Offset}
- */
-Msg.Up.UpMsg.createUpMsg = function(builder, contentType, contentOffset) {
-  Msg.Up.UpMsg.startUpMsg(builder);
-  Msg.Up.UpMsg.addContentType(builder, contentType);
-  Msg.Up.UpMsg.addContent(builder, contentOffset);
-  return Msg.Up.UpMsg.endUpMsg(builder);
-}
 
 // Exports for Node.js and RequireJS
 this.Msg = Msg;

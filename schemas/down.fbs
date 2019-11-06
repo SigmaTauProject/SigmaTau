@@ -5,14 +5,36 @@ struct Vec3 {
 	y:float;
 	z:float;
 }
+struct Quaternion {
+	a:int8;
+	b:int8;
+	c:int8;
+	d:int8;
+}
 
 //---LA (Location Array)
 table LAUpdate {
 	values	:	[Vec3]	;
 }
 
+//---HackEV (Entity View)
+table HackEVMesh {
+	id	:	uint16	;
+	mesh	:	[float]	;
+}
+table HackEVEntity {
+	pos	:	Vec3	;
+	ori	:	Quaternion	;
+	mesh	:	uint16	;
+}
+table HackEVUpdate {
+	entities	:	[HackEVEntity]	;
+}
+//---
 union MsgContent
 { LAUpdate
+, HackEVMesh
+, HackEVUpdate
 }
 
 table DownMsg {

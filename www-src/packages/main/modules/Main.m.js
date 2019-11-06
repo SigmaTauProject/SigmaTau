@@ -9,7 +9,7 @@ function startNetworking() {
 	ws.addEventListener("error",e=>console.log("Error ",e));
 	ws.addEventListener("message",e=>{
 		e.data.arrayBuffer().then(d=>new Uint8Array(d)).then(d=>{
-			laPort.receiveMessage(d);
+			hackEVPort.receiveMessage(d);
 		});
 	});
 	ws.addEventListener("close",e=>console.log("Close ",e));
@@ -52,14 +52,14 @@ function networkFloat(value,bits,signed=true,value100=1) {
 ////let [componentsPush,controls] = makeLayout();
 startNetworking();
 
-let laPort;
+let hackEVPort;
 let iframe = div("iframe");
 document.body.appendChild(iframe);
 setTimeout(()=>iframe.contentDocument.body.parentElement.replaceChild(
 	makeLayout(	portBuilder(send)
 		.wire()
 		.wire()
-		.la().ref(r=>laPort=r)
+		.hackEV().ref(r=>hackEVPort=r)
 		.done()
 	),
 	iframe.contentDocument.body
