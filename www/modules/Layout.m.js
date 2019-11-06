@@ -65,7 +65,7 @@ function locationArray(laPort) {
 }
 
 function hackEV3DView(hackEVPort) {
-	const canvas = div("canvas");
+	const canvas = div("canvas", {style:"width:1000px;height:1000px;"});
 	const gl = canvas.getContext("webgl");
 	if (!gl) gl = canvas.getContext("experimental-webgl");
 	const programInfo = twgl.createProgramInfo(gl,
@@ -121,8 +121,6 @@ void main() {
 			255, 255, 255, 255,
 		],
 	});
-	const uniforms = {
-	};
 	function render(time) {
 		time *= 0.001;
 		{
@@ -135,18 +133,19 @@ void main() {
 		const view = mat4.mul	( mat4.create()
 			, mat4.fromScaling(mat4.create(), [1,viewingSize/canvas.clientWidth,viewingSize/canvas.clientHeight])
 			, mat4.mul	( mat4.create()
-				, mat4.fromYRotation(mat4.create(), -Math.PI/6)
-				, mat4.fromTranslation(mat4.create(), vec3.fromValues(6,0,-4))
+				, mat4.fromYRotation(mat4.create(), -Math.PI/2)
+				, mat4.fromTranslation(mat4.create(), vec3.fromValues(0,0,-64))
 				)
 			);
 		gl.useProgram(programInfo.program);
 		for (let entity of hackEVPort.entities) {
 			////const world = mat4.fromZRotation(mat4.create(),time);
 			const world = mat4.fromTranslation(mat4.create(),vec3.fromValues(entity.pos[0],entity.pos[1],0));
-			const viewProjection = mat4.mul(mat4.create(), mat4.mul(mat4.create(), projection, mat4.fromZRotation(mat4.create(),time)),view);
-			uniforms.worldViewProjection = mat4.mul(mat4.create(), viewProjection, world);
+			const viewProjection = mat4.mul(mat4.create(), projection, view);
+			twgl.setUniforms(programInfo, {
+				worldViewProjection : mat4.mul(mat4.create(), viewProjection, world)
+			});
 			twgl.setBuffersAndAttributes(gl, programInfo, bufferInfo);
-			twgl.setUniforms(programInfo, uniforms);
 			gl.drawElements(gl.TRIANGLES, bufferInfo.numElements, gl.UNSIGNED_SHORT, 0);
 		}
 		requestAnimationFrame(render);

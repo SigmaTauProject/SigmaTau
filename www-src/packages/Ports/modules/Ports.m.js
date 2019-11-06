@@ -131,7 +131,7 @@ function portBuilder(send) {
 
 
 function networkFloat(value,bits,signed=true) {
-	value = Math.min(value100,Math.max(signed?-1:0,value));
+	value = Math.min(1,Math.max(signed?-1:0,value));
 	return Math.trunc(value*maxBound(bits,signed));
 }
 function unnetworkFloat(value,bits,signed=true) {
