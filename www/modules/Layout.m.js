@@ -84,7 +84,19 @@ void main() {
 	);
 	
 	gl.clearColor(0,0,0,1);
-	
+	gl.enable(gl.DEPTH_TEST);
+	gl.enable(gl.CULL_FACE);
+	const projection = mat4.mul
+		( mat4.create()
+		, mat4.perspective	( mat4.create()
+			, 90 * Math.PI / 180// FOV
+			////, gl.canvas.clientWidth / gl.canvas.clientHeight// aspect
+			, 1// aspect
+			, 0.1// near
+			, 1000// far
+			)
+		, new Float32Array([0,0,-1,0, 1,0,0,0, 0,1,0,0, 0,0,0,1])
+		);
 	
 	const arrays = {
 		position:	[1	, 0	, 0
@@ -113,25 +125,19 @@ void main() {
 	};
 	function render(time) {
 		time *= 0.001;
-		gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-		gl.enable(gl.DEPTH_TEST);
-		gl.enable(gl.CULL_FACE);
+		{
+			canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight;
+			gl.viewport(0, 0, canvas.width, canvas.height);
+		}
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-		const fov = 90 * Math.PI / 180;
-		const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
-		const zNear = 0.1;
-		const zFar = 1000;
-		////const projection = mat4.perspective(mat4.create(), fov, aspect, zNear, zFar);
-		const projection = mat4.mul(mat4.create(), mat4.perspective(mat4.create(), fov, aspect, zNear, zFar), new Float32Array([0,0,-1,0, 1,0,0,0, 0,1,0,0, 0,0,0,1]));
-		const eye = vec3.fromValues(1, -6, 4);
-		const target = vec3.fromValues(0, 0, 0);
-		const up = vec3.fromValues(0, 0, 1);
-		////const view = mat4.lookAt(mat4.create(), eye, target, up);
-		////const view = mat4.rotateY(mat4.create(), mat4.fromTranslation(mat4.create(),vec3.fromValues(6,0,-1)), Math.PI);
-		////const view = mat4.translate(mat4.create(), mat4.fromYRotation(mat4.create(), -Math.PI/16), vec3.fromValues(6,0,-2));
+		
+		const viewingSize = (canvas.clientWidth + canvas.clientHeight) / 2;
 		const view = mat4.mul	( mat4.create()
-			, mat4.fromYRotation(mat4.create(), -Math.PI/6)
-			, mat4.fromTranslation(mat4.create(), vec3.fromValues(6,0,-4))
+			, mat4.fromScaling(mat4.create(), [1,viewingSize/canvas.clientWidth,viewingSize/canvas.clientHeight])
+			, mat4.mul	( mat4.create()
+				, mat4.fromYRotation(mat4.create(), -Math.PI/6)
+				, mat4.fromTranslation(mat4.create(), vec3.fromValues(6,0,-4))
+				)
 			);
 		gl.useProgram(programInfo.program);
 		for (let entity of hackEVPort.entities) {
