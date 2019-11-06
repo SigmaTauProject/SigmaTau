@@ -65,7 +65,7 @@ function locationArray(laPort) {
 }
 
 function hackEV3DView(hackEVPort) {
-	const canvas = div("canvas", {style:"width:1000px;height:1000px;"});
+	const canvas = div("canvas", {style:"width:1200px;height:800px;"});
 	const gl = canvas.getContext("webgl");
 	if (!gl) gl = canvas.getContext("experimental-webgl");
 	const programInfo = twgl.createProgramInfo(gl,
