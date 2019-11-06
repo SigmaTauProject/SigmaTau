@@ -101,7 +101,7 @@ void main() {
 	const arrays = {
 		position:	[1	, 0	, 0
 			, -1	, 1	, 0
-			, -1	, -0.3	, 0
+			, -1	, -1	, 0
 			, -1.4	, 0	, 1
 			],
 		indices:	[ 0	, 2	, 1
