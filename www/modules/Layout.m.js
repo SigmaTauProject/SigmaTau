@@ -69,53 +69,224 @@ function hackEV3DView(hackEVPort) {
 	const gl = canvas.getContext("webgl");
 	if (!gl) gl = canvas.getContext("experimental-webgl");
 	const programInfo = twgl.createProgramInfo(gl,
-		[`	attribute vec4 position;
-			
-			void main() {
-				gl_Position = position;
-			}
+		[`	
+uniform mat4 u_worldViewProjection;
+attribute vec4 position;
+void main() {
+	gl_Position = u_worldViewProjection * position;
+}
 		`,
-		`	precision mediump float;
-			
-			uniform vec2 resolution;
-			uniform float time;
-			
-			void main() {
-				vec2 uv = gl_FragCoord.xy / resolution;
-				float color = 0.0;
-				// lifted from glslsandbox.com
-				color += sin( uv.x * cos( time / 3.0 ) * 60.0 ) + cos( uv.y * cos( time / 2.80 ) * 10.0 );
-				color += sin( uv.y * sin( time / 2.0 ) * 40.0 ) + cos( uv.x * sin( time / 1.70 ) * 40.0 );
-				color += sin( uv.x * sin( time / 1.0 ) * 10.0 ) + sin( uv.y * sin( time / 3.50 ) * 80.0 );
-				color *= sin( time / 10.0 ) * 0.5;
-				
-				gl_FragColor = vec4( vec3( color * 0.5, sin( color + time / 2.5 ) * 0.75, color ), 1.0 );
-			}
+		`
+void main() {
+	gl_FragColor = vec4(0.7,0.7,0.7,1);
+}
 		`]
 	);
 	
+	gl.clearColor(0,0,0,1);
+	
+	
 	const arrays = {
-		position: [-1, -1, 0, 1, -1, 0, -1, 1, 0, -1, 1, 0, 1, -1, 0, 1, 1, 0],
+		position:	[ 1	, 0	, 0
+			, -1	, 1	, 0
+			, -1	, -1	, 0
+			, -1	, 0	, 1
+			],
+		indices:	[ 0	, 2	, 1
+			, 0	, 3	, 2
+			, 0	, 1	, 3
+			, 1	, 2	, 3
+			],
 	};
 	const bufferInfo = twgl.createBufferInfoFromArrays(gl, arrays);
-	
+	const tex = twgl.createTexture(gl, {
+		min: gl.NEAREST,
+		mag: gl.NEAREST,
+		src: [
+			255, 255, 255, 255,
+			192, 192, 192, 255,
+			192, 192, 192, 255,
+			255, 255, 255, 255,
+		],
+	});
+	const uniforms = {
+	};
 	function render(time) {
-		twgl.resizeCanvasToDisplaySize(gl.canvas);
+		time *= 0.001;
 		gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-		
-		const uniforms = {
-			time: time * 0.001,
-			resolution: [gl.canvas.width, gl.canvas.height],
-		};
-		
+		gl.enable(gl.DEPTH_TEST);
+		gl.enable(gl.CULL_FACE);
+		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+		const fov = 30 * Math.PI / 180;
+		const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
+		const zNear = 0.5;
+		const zFar = 10;
+		const projection = mat4.perspective(mat4.create(), fov, aspect, zNear, zFar);
+		const eye = vec3.fromValues(1, -6, 4);
+		const target = vec3.fromValues(0, 0, 0);
+		const up = vec3.fromValues(0, 0, 1);
+		const world = mat4.fromZRotation(mat4.create(),time);
+		const view = mat4.lookAt(mat4.create(), eye, target, up);
+		const viewProjection = mat4.mul(mat4.create, projection, view);
+		uniforms.u_worldViewProjection = mat4.mul(mat4.create(), viewProjection, world);
 		gl.useProgram(programInfo.program);
 		twgl.setBuffersAndAttributes(gl, programInfo, bufferInfo);
 		twgl.setUniforms(programInfo, uniforms);
-		twgl.drawBufferInfo(gl, gl.TRIANGLES, bufferInfo);
-		
+		gl.drawElements(gl.TRIANGLES, bufferInfo.numElements, gl.UNSIGNED_SHORT, 0);
 		requestAnimationFrame(render);
 	}
 	requestAnimationFrame(render);
+	
+	////const shipMesh = {
+	////	position:	[ 1	, 0	, 0
+	////		, -1	, 0	, 0.5
+	////		, -1	, 0.75	, 0
+	////		, 1	, 0	, 0
+	////		, -1	, -0.5	, 0
+	////		,-1	,0	,0.5
+	////		],
+	////};
+	////const bufferInfo = twgl.createBufferInfoFromArrays(gl, shipMesh);
+	////
+	////var mat = mat4.identity(mat4.create());
+	////mat4.scale(mat,mat,[0.5,0.5,0.5]);
+	////
+	////var viewMat = mat4.identity(mat4.create());
+	////mat4.translate(mat,mat,[-2,0,0]);
+	////mat4.rotate(mat,mat,Math.PI,[0,0,1]);
+	////
+	////var projMat = mat4.identity(mat4.create());
+	////mat4.perspective(projMat, 90, 1, 1, 1000);
+	////
+	////var worldViewMat = mat4.create();
+	////
+	////function render(time) {
+	////	twgl.resizeCanvasToDisplaySize(gl.canvas);
+	////	gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+	////	
+	////	mat4.mul(worldViewMat, projMat,viewMat,mat);
+	////	console.log(worldViewMat);
+	////	
+	////	const uniforms = {
+	////		transformMatrix: worldViewMat,
+	////	};
+	////	
+	////	gl.useProgram(programInfo.program);
+	////	twgl.setBuffersAndAttributes(gl, programInfo, bufferInfo);
+	////	twgl.setUniforms(programInfo, uniforms);
+	////	twgl.drawBufferInfo(gl, gl.TRIANGLES, bufferInfo);
+	////	
+	////	requestAnimationFrame(render);
+	////}
+	////requestAnimationFrame(render);
+	
+	////var boxVertices = 
+	////[ // X, Y, Z           R, G, B
+	////	// Top
+	////	-1.0, 1.0, -1.0,   0.5, 0.5, 0.5,
+	////	-1.0, 1.0, 1.0,    0.5, 0.5, 0.5,
+	////	1.0, 1.0, 1.0,     0.5, 0.5, 0.5,
+	////	1.0, 1.0, -1.0,    0.5, 0.5, 0.5,
+////
+	////	// Left
+	////	-1.0, 1.0, 1.0,    0.75, 0.25, 0.5,
+	////	-1.0, -1.0, 1.0,   0.75, 0.25, 0.5,
+	////	-1.0, -1.0, -1.0,  0.75, 0.25, 0.5,
+	////	-1.0, 1.0, -1.0,   0.75, 0.25, 0.5,
+////
+	////	// Right
+	////	1.0, 1.0, 1.0,    0.25, 0.25, 0.75,
+	////	1.0, -1.0, 1.0,   0.25, 0.25, 0.75,
+	////	1.0, -1.0, -1.0,  0.25, 0.25, 0.75,
+	////	1.0, 1.0, -1.0,   0.25, 0.25, 0.75,
+////
+	////	// Front
+	////	1.0, 1.0, 1.0,    1.0, 0.0, 0.15,
+	////	1.0, -1.0, 1.0,    1.0, 0.0, 0.15,
+	////	-1.0, -1.0, 1.0,    1.0, 0.0, 0.15,
+	////	-1.0, 1.0, 1.0,    1.0, 0.0, 0.15,
+////
+	////	// Back
+	////	1.0, 1.0, -1.0,    0.0, 1.0, 0.15,
+	////	1.0, -1.0, -1.0,    0.0, 1.0, 0.15,
+	////	-1.0, -1.0, -1.0,    0.0, 1.0, 0.15,
+	////	-1.0, 1.0, -1.0,    0.0, 1.0, 0.15,
+////
+	////	// Bottom
+	////	-1.0, -1.0, -1.0,   0.5, 0.5, 1.0,
+	////	-1.0, -1.0, 1.0,    0.5, 0.5, 1.0,
+	////	1.0, -1.0, 1.0,     0.5, 0.5, 1.0,
+	////	1.0, -1.0, -1.0,    0.5, 0.5, 1.0,
+	////];
+////
+	////var boxIndices =
+	////[
+	////	// Top
+	////	0, 1, 2,
+	////	0, 2, 3,
+	////	
+	////	// Left
+	////	5, 4, 6,
+	////	6, 4, 7,
+	////	
+	////	// Right
+	////	8, 9, 10,
+	////	8, 10, 11,
+	////	
+	////	// Front
+	////	13, 12, 14,
+	////	15, 14, 12,
+	////	
+	////	// Back
+	////	16, 17, 18,
+	////	16, 18, 19,
+	////	
+	////	// Bottom
+	////	21, 20, 22,
+	////	22, 20, 23
+	////];
+	////
+	////const bufferInfo = twgl.createBufferInfoFromArrays(gl, {position:boxVertices, indices:boxIndices});
+	////
+	////var worldMat = mat4.create();
+	////var viewMat = mat4.create();
+	////var projMat = mat4.create();
+	////mat4.identity(worldMat);
+	////mat4.lookAt(viewMat, [0, 0, -8], [0, 0, 0], [0, 1, 0]);
+	////mat4.perspective(projMat, glMatrix.toRadian(45), canvas.clientWidth / canvas.clientHeight, 0.1, 1000.0);
+////
+	////var xRotationMat = mat4.create();
+	////var yRotationMat = mat4.create();
+////
+	//////
+	////// Main render loop
+	//////
+	////var identityMat = mat4.create();
+	////mat4.identity(identityMat);
+	////var angle = 0;
+	////var loop = function () {
+	////	angle = performance.now() / 1000 / 6 * 2 * Math.PI;
+	////	mat4.rotate(yRotationMat, identityMat, angle, [0, 1, 0]);
+	////	mat4.rotate(xRotationMat, identityMat, angle / 4, [1, 0, 0]);
+	////	mat4.mul(worldMat, yRotationMat, xRotationMat);
+////
+	////	gl.clearColor(0.75, 0.85, 0.8, 1.0);
+	////	gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
+	////	
+	////	const uniforms = {
+	////		worldMat: worldMat,
+	////		viewMat: viewMat,
+	////		projMat: projMat,
+	////	};
+	////	
+	////	gl.useProgram(programInfo.program);
+	////	twgl.setBuffersAndAttributes(gl, programInfo, bufferInfo);
+	////	twgl.setUniforms(programInfo, uniforms);
+	////	twgl.drawBufferInfo(gl, gl.TRIANGLES, bufferInfo);
+	////	
+	////	requestAnimationFrame(loop);
+	////};
+	////requestAnimationFrame(loop);
 	
 	return canvas;
 }
@@ -126,9 +297,11 @@ class GUIItem {
 		this.el = el;
 	}
 }
-Object.prototype.escRef = function(f) {
-	f(this);
-	return this;
-}
+Object.defineProperty(Object.prototype, "escRef", {value:
+	function (f) {
+		f(this);
+		return this;
+	}
+});
 
 
