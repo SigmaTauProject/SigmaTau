@@ -44,33 +44,33 @@ extern(C) export {
 	}
 	void forceEntity(World* world, Entity er, float x, float y, float z) {
 		withEntity(world,er,(ea){
-			auto force = vec3f(x,y,z) * getEntityOri(world, ea);
+			auto force = vec3f(x,y,z) * WorldLogic.getEntityOri(world, ea);
 			WorldLogic.forceEntity(world,ea, (force*(pow(2f,16f)/1000f)).vecCast!int);
 		});
 	}
 	void rotateEntity(World* world, Entity er, float w, float x, float y, float z) {
 		withEntity(world,er,(ea){
-			WorldLogic.rotateEntity(world,ea,quatf(w,x,y,z) * getEntityOri(world, ea));
+			WorldLogic.rotateEntity(world,ea,quatf(w,x,y,z) * WorldLogic.getEntityOri(world, ea));
 		});
 	}
 	void angularForceEntity(World* world, Entity er, float a, float x, float y, float z) {
 		withEntity(world,er,(ea){
-			WorldLogic.angularForceEntity(world,ea, (arotf(a,x,y,z) * getEntityOri(world, ea)).to_axis_rotation);
+			WorldLogic.angularForceEntity(world,ea, (arotf(a,x,y,z) * WorldLogic.getEntityOri(world, ea)).to_axis_rotation);
 		});
 	}
 	void angularXForceEntity(World* world, Entity er, float a) {
 		withEntity(world,er,(ea){
-			WorldLogic.angularForceEntity(world,ea, (arotf.xrotation(a) * getEntityOri(world, ea)).to_axis_rotation);
+			WorldLogic.angularForceEntity(world,ea, (arotf.xrotation(a) * WorldLogic.getEntityOri(world, ea)).to_axis_rotation);
 		});
 	}
 	void angularYForceEntity(World* world, Entity er, float a) {
 		withEntity(world,er,(ea){
-			WorldLogic.angularForceEntity(world,ea, (arotf.yrotation(a) * getEntityOri(world, ea)).to_axis_rotation);
+			WorldLogic.angularForceEntity(world,ea, (arotf.yrotation(a) * WorldLogic.getEntityOri(world, ea)).to_axis_rotation);
 		});
 	}
 	void angularZForceEntity(World* world, Entity er, float a) {
 		withEntity(world,er,(ea){
-			WorldLogic.angularForceEntity(world,ea, (arotf.zrotation(a) * getEntityOri(world, ea)).to_axis_rotation);
+			WorldLogic.angularForceEntity(world,ea, (arotf.zrotation(a) * WorldLogic.getEntityOri(world, ea)).to_axis_rotation);
 		});
 	}
 	void angularEulerForceEntity(World* world, Entity er, float yaw, float pitch, float roll) {
@@ -83,7 +83,26 @@ extern(C) export {
 	float[3]* getEntityPos(World* world, Entity rer, Entity er) {
 		// TODO: Fix this, deadlocking is theoretically possable.  Should not hold a mutex while reaching for another.
 		return withEntity(world,rer,(rea)=>withEntity(world,er,(ea){
-			return [(WorldLogic.getEntityOri(world,rea).inverse * (((WorldLogic.getEntityPos(world,ea) - WorldLogic.getEntityPos(world,rea))).vecCast!float / pow(2f,16f))).ffiVec].ptr;
+			return [(	WorldLogic.getEntityOri(world,rea).inverse
+				*
+				(	(	(	WorldLogic.getEntityPos(world,ea)
+							-
+							WorldLogic.getEntityPos(world,rea)
+						)
+					).vecCast!float
+					/
+					pow(2f,16f)
+				)
+			).ffiVec].ptr;
+		}));
+	}
+	float[4]* getEntityOri(World* world, Entity rer, Entity er) {
+		// TODO: Fix this, deadlocking is theoretically possable.  Should not hold a mutex while reaching for another.
+		return withEntity(world,rer,(rea)=>withEntity(world,er,(ea){
+			return [(	WorldLogic.getEntityOri(world,rea).inverse
+				*
+				WorldLogic.getEntityOri(world,ea)
+			).ffiQuat].ptr;
 		}));
 	}
 	

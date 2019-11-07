@@ -44,6 +44,7 @@ foreign import ccall "angularZForceEntity" angularZForceEntityFFI :: Ptr() -> ER
 foreign import ccall "angularEulerForceEntity" angularEulerForceEntityFFI :: Ptr() -> ERefFFI -> CFloat -> CFloat -> CFloat -> IO ()
 
 foreign import ccall "getEntityPos" getEntityPosFFI :: Ptr() -> ERefFFI -> ERefFFI -> IO (Ptr (V3 CFloat))
+foreign import ccall "getEntityOri" getEntityOriFFI :: Ptr() -> ERefFFI -> ERefFFI -> IO (Ptr (Quaternion CFloat))
 type DoEntitiesCallback = ERefFFI->IO ()
 foreign import ccall "wrapper" mkDoEntitiesCallback :: DoEntitiesCallback -> IO (FunPtr DoEntitiesCallback)
 foreign import ccall "doEntities" doEntitiesFFI :: Ptr() -> FunPtr DoEntitiesCallback -> IO ()
@@ -76,6 +77,8 @@ angularEulerForceEntity (World world) (EntityRef entityRef) (V3 x y z) = withFor
 
 getEntityPos :: World -> EntityRef -> EntityRef -> IO (Point V3 Float)
 getEntityPos (World world) (EntityRef rootEntityRef) (EntityRef entityRef) = withForeignPtr world (\wld->P . fmap (\(CFloat f)->f) <$> (peek =<< getEntityPosFFI wld rootEntityRef entityRef))
+getEntityOri :: World -> EntityRef -> EntityRef -> IO (Quaternion Float)
+getEntityOri (World world) (EntityRef rootEntityRef) (EntityRef entityRef) = withForeignPtr world (\wld->fmap (\(CFloat f)->f) <$> (peek =<< getEntityOriFFI wld rootEntityRef entityRef))
 
 doEntities :: World -> (EntityRef->IO()) -> IO ()
 doEntities (World world) callback = withForeignPtr world (\wld->(\fp->doEntitiesFFI wld fp >> freeHaskellFunPtr fp) =<< mkDoEntitiesCallback (\er->callback $ EntityRef er))

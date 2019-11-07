@@ -197,6 +197,13 @@ public {
 		return xs.vector.arrayCast!NT;
 	}
 	
+	Type[4] ffiQuat(Type)(Quaternion!Type xs) {
+		return xs.quaternion;
+	}
+	NT[4] ffiQuat(NT, Type)(Vector!Type xs) {
+		return xs.quaterion.arrayCast!NT;
+	}
+	
 	NT[] arrayCast(NT,OT)(OT[] xs) {
 		return xs.map!(cst!(NT,OT)).array();
 	}
