@@ -140,7 +140,10 @@ void main() {
 		gl.useProgram(programInfo.program);
 		for (let entity of hackEVPort.entities) {
 			////const world = mat4.fromZRotation(mat4.create(),time);
-			const world = mat4.fromTranslation(mat4.create(),vec3.fromValues(entity.pos[0],entity.pos[1],0));
+			const world = mat4.mul	( mat4.create()
+				, mat4.fromTranslation(mat4.create(),vec3.fromValues(entity.pos[0],entity.pos[1],0))
+				, mat4.fromQuat(mat4.create(), [entity.ori[1],entity.ori[2],entity.ori[3],entity.ori[0]])
+				);
 			const viewProjection = mat4.mul(mat4.create(), projection, view);
 			twgl.setUniforms(programInfo, {
 				worldViewProjection : mat4.mul(mat4.create(), viewProjection, world)
