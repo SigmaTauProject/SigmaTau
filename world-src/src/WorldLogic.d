@@ -3,6 +3,8 @@ module WorldLogic;
 import cst_;
 
 import std.stdio;
+import std.conv;
+import std.math;
 import core.time;
 import core.thread;
 import core.sync.mutex;
@@ -30,6 +32,8 @@ struct Entity {
 	EntityType type;
 	vec3i pos;
 	vec3i vel;
+	quatf ori;
+	arotf anv;
 	Mutex mutex;
 	MonoTime time;
 }
@@ -44,7 +48,15 @@ struct EntityAccess {
 public
 World* newWorld(MonoTime time) {
 	World* world = new World([],time);
-	new Thread(worldThread(world)).start();
+	new Thread((){
+		try {
+			worldThread(world)();
+		}
+		catch (Throwable e) {
+			writeln(e);
+			throw e;
+		}
+	}).start();
 	return world;
 }
 private
@@ -62,6 +74,8 @@ void delegate() worldThread(World* world) {
 				withEntity(world,i,(_){
 					e.time = updateTime;
 					e.pos += getDurVel(e.vel,loopDur);
+					e.ori = getDurAnv(e.anv,loopDur) * e.ori;
+					e.ori.normalize();
 				});
 			}
 		}
@@ -104,13 +118,19 @@ T withEntity(T)(World* world, EntityRef er, T delegate(EntityAccess) callback) {
 }
 
 public
-EntityRef createEntity(World* world, EntityType type, vec3i pos, vec3i vel=vec3i(0,0,0)) {
+EntityRef createEntity	( World*	world	
+	, EntityType	type	
+	, vec3i	pos	=vec3i(0,0,0)
+	, quatf	ori	=quatf.identity()
+	, vec3i	vel	=vec3i(0,0,0)
+	, arotf	anv	=arotf.identity()
+) {
 	EntityRef addEntity(World* world, Entity* entity) {
 		// TODO: Fix this, it is still unsafe, as `world.entities` is not mutex locked.
 		world.entities ~= entity;
 		return world.entities.length-1;
 	}
-	return addEntity(world, new Entity(type,pos,vel,new Mutex(),world.time));
+	return addEntity(world, new Entity(type,pos,vel,ori,anv,new Mutex(),world.time));
 }
 
 public
@@ -121,10 +141,25 @@ public
 void forceEntity(World* world, EntityAccess ea, vec3i a) {
 	world.entities[ea.er].vel += a;
 }
+public
+void rotateEntity(World* world, EntityAccess ea, quatf a) {
+	world.entities[ea.er].ori = a * world.entities[ea.er].ori;
+	world.entities[ea.er].ori.normalize();
+}
+public
+void angularForceEntity(World* world, EntityAccess ea, arotf a) {
+	world.entities[ea.er].anv = a * world.entities[ea.er].anv;
+	////world.entities[ea.er].anv.normalize();
+}
 
+public
 vec3i getEntityPos(World* world, EntityAccess ea) {
 	return world.entities[ea.er].pos + getDurVel(world.entities[ea.er].vel, world.time-world.entities[ea.er].time);
 	////return world.entities[ea.er].pos;
+}
+public
+quatf getEntityOri(World* world, EntityAccess ea) {
+	return getDurAnv(world.entities[ea.er].anv, world.time-world.entities[ea.er].time) * world.entities[ea.er].ori;
 }
 
 
@@ -132,6 +167,9 @@ vec3i getEntityPos(World* world, EntityAccess ea) {
 private {
 	vec3i getDurVel(vec3i vel, Duration dur) {
 		return vel * dur.total!"msecs".cst!int;
+	}
+	arotf getDurAnv(arotf anv, Duration dur) {
+		return anv * (dur.total!"msecs".cst!float/1000);
 	}
 }
 
@@ -147,14 +185,25 @@ public {
 	alias Vec2(Type) = Vector!(Type,2);
 	alias Vec3(Type) = Vector!(Type,3);
 	alias Vec4(Type) = Vector!(Type,4);
-
+	
+	alias quatf = Quaternion!float;
+	
+	alias arotf = AxisRotation!float;
+	
 	Type[L] ffiVec(Type, size_t L)(Vector!(Type,L) xs) {
 		return xs.vector;
 	}
 	NT[L] ffiVec(NT, Type, size_t L)(Vector!(Type,L) xs) {
 		return xs.vector.arrayCast!NT;
 	}
-
+	
+	Type[4] ffiQuat(Type)(Quaternion!Type xs) {
+		return xs.quaternion;
+	}
+	NT[4] ffiQuat(NT, Type)(Vector!Type xs) {
+		return xs.quaterion.arrayCast!NT;
+	}
+	
 	NT[] arrayCast(NT,OT)(OT[] xs) {
 		return xs.map!(cst!(NT,OT)).array();
 	}
@@ -165,10 +214,13 @@ public {
 		}
 		return nxs;
 	}
-
+	
 	Vector!(NT,L) vecCast(NT,OT,size_t L)(Vector!(OT,L) xs) {
 		return Vector!(NT,L)(xs.vector.arrayCast!NT);
 	}
+	
+	
+	
 }
 
 

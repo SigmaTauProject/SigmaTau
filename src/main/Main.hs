@@ -27,9 +27,10 @@ main = withDRuntime $ do
 	world <- newWorld
 	entity1 <- newEntity world TypeShip (P $ V3 (-50) 1 0)
 	newEntity world TypeShip (P $ V3 6 5 (-3))
-	newEntity world TypeShip (P $ V3 9 8 2)
+	newEntity world TypeShip (P $ V3 9 (-8) 2)
 	newEntity world TypeShip (P $ V3 9 9 10)
-	newEntity world TypeShip (P $ V3 (-1) (-1) 0)
+	newEntity world TypeShip (P $ V3 (-4) 0 0)
+	newEntity world TypeShip (P $ V3 0 0 0)
 	forceEntity world entity1 (V3 10 0 0)
 	
 	connectionChan <- runTerminalServer
@@ -48,6 +49,54 @@ main = withDRuntime $ do
 	
 	
 	forever (threadDelay 50000>>updateWorld world>>ship)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
