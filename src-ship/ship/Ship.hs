@@ -36,7 +36,7 @@ newShip :: World -> NetworkConnection -> IO (IO ())
 newShip world networkConnection = do
 	activeConnections <- newLifetimeSet
 	entity <- newEntity world TypeShip (P $ V3 0 0 0)
-	angularXForceEntity world entity 2
+	angularZForceEntity world entity 0.05
 	
 	thrusters <- sequence $ [makeThruster (V3 1 0 0), makeThruster (V3 0 1 0)]
 	
@@ -110,4 +110,8 @@ infixl 9 !?
 	where	f 0 (x:xs) = Just x
 		f i (x:xs) = f (i-1) xs
 		f i [] = Nothing
+
+
+
+
 

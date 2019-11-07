@@ -2,6 +2,6 @@
 	"fileVersion": 1,
 	"versions": {
 		"cst": "1.0.4",
-		"gl3n": "1.3.1"
+		"gl3n": {"path":"gl3n"}
 	}
 }

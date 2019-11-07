@@ -3,6 +3,8 @@ module WorldLogic;
 import cst_;
 
 import std.stdio;
+import std.conv;
+import std.math;
 import core.time;
 import core.thread;
 import core.sync.mutex;
@@ -31,7 +33,7 @@ struct Entity {
 	vec3i pos;
 	vec3i vel;
 	quatf ori;
-	quatf anv;
+	arotf anv;
 	Mutex mutex;
 	MonoTime time;
 }
@@ -46,7 +48,15 @@ struct EntityAccess {
 public
 World* newWorld(MonoTime time) {
 	World* world = new World([],time);
-	new Thread(worldThread(world)).start();
+	new Thread((){
+		try {
+			worldThread(world)();
+		}
+		catch (Throwable e) {
+			writeln(e);
+			throw e;
+		}
+	}).start();
 	return world;
 }
 private
@@ -65,6 +75,7 @@ void delegate() worldThread(World* world) {
 					e.time = updateTime;
 					e.pos += getDurVel(e.vel,loopDur);
 					e.ori = getDurAnv(e.anv,loopDur) * e.ori;
+					e.ori.normalize();
 				});
 			}
 		}
@@ -112,7 +123,7 @@ EntityRef createEntity	( World*	world
 	, vec3i	pos	=vec3i(0,0,0)
 	, quatf	ori	=quatf.identity()
 	, vec3i	vel	=vec3i(0,0,0)
-	, quatf	anv	=quat.identity()
+	, arotf	anv	=arotf.identity()
 ) {
 	EntityRef addEntity(World* world, Entity* entity) {
 		// TODO: Fix this, it is still unsafe, as `world.entities` is not mutex locked.
@@ -133,10 +144,12 @@ void forceEntity(World* world, EntityAccess ea, vec3i a) {
 public
 void rotateEntity(World* world, EntityAccess ea, quatf a) {
 	world.entities[ea.er].ori = a * world.entities[ea.er].ori;
+	world.entities[ea.er].ori.normalize();
 }
 public
-void angularForceEntity(World* world, EntityAccess ea, quatf a) {
+void angularForceEntity(World* world, EntityAccess ea, arotf a) {
 	world.entities[ea.er].anv = a * world.entities[ea.er].anv;
+	////world.entities[ea.er].anv.normalize();
 }
 
 public
@@ -146,7 +159,7 @@ vec3i getEntityPos(World* world, EntityAccess ea) {
 }
 public
 quatf getEntityOri(World* world, EntityAccess ea) {
-	return world.entities[ea.er].ori + getDurAnv(world.entities[ea.er].anv, world.time-world.entities[ea.er].time);
+	return getDurAnv(world.entities[ea.er].anv, world.time-world.entities[ea.er].time) * world.entities[ea.er].ori;
 }
 
 
@@ -155,8 +168,8 @@ private {
 	vec3i getDurVel(vec3i vel, Duration dur) {
 		return vel * dur.total!"msecs".cst!int;
 	}
-	quatf getDurAnv(quatf anv, Duration dur) {
-		return anv * dur.total!"msecs".cst!float;
+	arotf getDurAnv(arotf anv, Duration dur) {
+		return anv * (dur.total!"msecs".cst!float/1000);
 	}
 }
 
@@ -175,13 +188,15 @@ public {
 	
 	alias quatf = Quaternion!float;
 	
+	alias arotf = AxisRotation!float;
+	
 	Type[L] ffiVec(Type, size_t L)(Vector!(Type,L) xs) {
 		return xs.vector;
 	}
 	NT[L] ffiVec(NT, Type, size_t L)(Vector!(Type,L) xs) {
 		return xs.vector.arrayCast!NT;
 	}
-
+	
 	NT[] arrayCast(NT,OT)(OT[] xs) {
 		return xs.map!(cst!(NT,OT)).array();
 	}
@@ -192,10 +207,13 @@ public {
 		}
 		return nxs;
 	}
-
+	
 	Vector!(NT,L) vecCast(NT,OT,size_t L)(Vector!(OT,L) xs) {
 		return Vector!(NT,L)(xs.vector.arrayCast!NT);
 	}
+	
+	
+	
 }
 
 

@@ -41,7 +41,6 @@ foreign import ccall "angularForceEntity" angularForceEntityFFI :: Ptr() -> ERef
 foreign import ccall "angularXForceEntity" angularXForceEntityFFI :: Ptr() -> ERefFFI -> CFloat -> IO ()
 foreign import ccall "angularYForceEntity" angularYForceEntityFFI :: Ptr() -> ERefFFI -> CFloat -> IO ()
 foreign import ccall "angularZForceEntity" angularZForceEntityFFI :: Ptr() -> ERefFFI -> CFloat -> IO ()
-foreign import ccall "angularAxisForceEntity" angularAxisForceEntityFFI :: Ptr() -> ERefFFI -> CFloat -> CFloat -> CFloat -> CFloat -> IO ()
 foreign import ccall "angularEulerForceEntity" angularEulerForceEntityFFI :: Ptr() -> ERefFFI -> CFloat -> CFloat -> CFloat -> IO ()
 
 foreign import ccall "getEntityPos" getEntityPosFFI :: Ptr() -> ERefFFI -> ERefFFI -> IO (Ptr (V3 CFloat))
@@ -64,16 +63,14 @@ newEntity (World world) entityType (P (V3 x y z)) = EntityRef <$> withForeignPtr
 
 forceEntity :: World -> EntityRef -> V3 Float -> IO ()
 forceEntity (World world) (EntityRef entityRef) (V3 x y z) = withForeignPtr world (\wld->forceEntityFFI wld entityRef (CFloat x) (CFloat y) (CFloat z))
-angularForceEntity :: World -> EntityRef -> Quaternion Float -> IO ()
-angularForceEntity (World world) (EntityRef entityRef) (Quaternion w (V3 x y z)) = withForeignPtr world (\wld->angularForceEntityFFI wld entityRef (CFloat w) (CFloat x) (CFloat y) (CFloat z))
+angularForceEntity :: World -> EntityRef -> Float -> V3 Float -> IO ()
+angularForceEntity (World world) (EntityRef entityRef) a (V3 x y z) = withForeignPtr world (\wld->angularForceEntityFFI wld entityRef (CFloat a) (CFloat x) (CFloat y) (CFloat z))
 angularXForceEntity :: World -> EntityRef -> Float -> IO ()
 angularXForceEntity (World world) (EntityRef entityRef) a = withForeignPtr world (\wld->angularXForceEntityFFI wld entityRef (CFloat a))
 angularYForceEntity :: World -> EntityRef -> Float -> IO ()
 angularYForceEntity (World world) (EntityRef entityRef) a = withForeignPtr world (\wld->angularYForceEntityFFI wld entityRef (CFloat a))
 angularZForceEntity :: World -> EntityRef -> Float -> IO ()
 angularZForceEntity (World world) (EntityRef entityRef) a = withForeignPtr world (\wld->angularZForceEntityFFI wld entityRef (CFloat a))
-angularAxisForceEntity :: World -> EntityRef -> Float -> V3 Float -> IO ()
-angularAxisForceEntity (World world) (EntityRef entityRef) a (V3 x y z) = withForeignPtr world (\wld->angularAxisForceEntityFFI wld entityRef (CFloat a) (CFloat x) (CFloat y) (CFloat z))
 angularEulerForceEntity :: World -> EntityRef -> V3 Float -> IO ()
 angularEulerForceEntity (World world) (EntityRef entityRef) (V3 x y z) = withForeignPtr world (\wld->angularEulerForceEntityFFI wld entityRef (CFloat x) (CFloat y) (CFloat z))
 
