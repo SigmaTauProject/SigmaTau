@@ -5,6 +5,7 @@ module Ship (newShip) where
 import Linear.Affine
 import Linear.Vector ((*^))
 import Linear.V3
+import Linear.Quaternion
 
 import Data.List (foldl')
 import Data.IORef
@@ -36,7 +37,8 @@ newShip :: World -> NetworkConnection -> IO (IO ())
 newShip world networkConnection = do
 	activeConnections <- newLifetimeSet
 	entity <- newEntity world TypeShip (P $ V3 0 0 0)
-	angularZForceEntity world entity 0.05
+	angularZForceEntity world entity 0.2
+	angularYForceEntity world entity 0.1
 	
 	thrusters <- sequence $ [makeThruster (V3 1 0 0), makeThruster (V3 0 1 0)]
 	
@@ -46,13 +48,13 @@ newShip world networkConnection = do
 				add activeConnections con
 			)
 		
-		rawEntities <- mapEntities world (getEntityPos world entity)
+		rawEntities <- mapEntities world (\e->(,) <$> getEntityPos world entity e <*> getEntityOri world entity e)
 		let entitiesMsg	= downMsg
 			$ msgContentHackEVUpdate $ hackEVUpdate
 			$ Just $ FB.fromList'
-			$ fmap (\pos->hackEVEntity
+			$ fmap (\(pos,ori)->hackEVEntity
 					(Just $ toNetVec $ unP pos)
-					(Just $ quaternion (networkFloat 1) 0 0 0)
+					(Just $ toNetQuat $ ori)
 					(Just $ 0)
 				)
 			$ rawEntities
@@ -100,6 +102,7 @@ unnetworkFloat value
 	| otherwise = max (-1) $ fromIntegral value / fromIntegral (maxBound :: a)
 
 toNetVec (V3 x y z) = vec3 x y z
+toNetQuat (Quaternion w (V3 x y z)) = quaternion (networkFloat w) (networkFloat x) (networkFloat y) (networkFloat z)
 
 
 infixl 9 !?

@@ -29,7 +29,7 @@ main = withDRuntime $ do
 	newEntity world TypeShip (P $ V3 6 5 (-3))
 	newEntity world TypeShip (P $ V3 9 8 2)
 	newEntity world TypeShip (P $ V3 9 9 10)
-	newEntity world TypeShip (P $ V3 (-1) (-1) 0)
+	newEntity world TypeShip (P $ V3 (-2) 0 0)
 	forceEntity world entity1 (V3 10 0 0)
 	
 	connectionChan <- runTerminalServer
