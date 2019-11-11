@@ -19,7 +19,8 @@ Msg.Down.MsgContent = {
   NONE: 0,
   LAUpdate: 1,
   HackEVMesh: 2,
-  HackEVUpdate: 3
+  HackEVUpdate: 3,
+  RadarArcUpdate: 4
 };
 
 /**
@@ -556,6 +557,91 @@ Msg.Down.HackEVUpdate.startEntitiesVector = function(builder, numElems) {
  * @returns {flatbuffers.Offset}
  */
 Msg.Down.HackEVUpdate.endHackEVUpdate = function(builder) {
+  var offset = builder.endObject();
+  return offset;
+};
+
+/**
+ * @constructor
+ */
+Msg.Down.RadarArcUpdate = function() {
+  /**
+   * @type {flatbuffers.ByteBuffer}
+   */
+  this.bb = null;
+
+  /**
+   * @type {number}
+   */
+  this.bb_pos = 0;
+};
+
+/**
+ * @param {number} i
+ * @param {flatbuffers.ByteBuffer} bb
+ * @returns {Msg.Down.RadarArcUpdate}
+ */
+Msg.Down.RadarArcUpdate.prototype.__init = function(i, bb) {
+  this.bb_pos = i;
+  this.bb = bb;
+  return this;
+};
+
+/**
+ * @param {flatbuffers.ByteBuffer} bb
+ * @param {Msg.Down.RadarArcUpdate=} obj
+ * @returns {Msg.Down.RadarArcUpdate}
+ */
+Msg.Down.RadarArcUpdate.getRootAsRadarArcUpdate = function(bb, obj) {
+  return (obj || new Msg.Down.RadarArcUpdate).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+};
+
+/**
+ * @param {number} index
+ * @param {Msg.Down.Vec3=} obj
+ * @returns {Msg.Down.Vec3}
+ */
+Msg.Down.RadarArcUpdate.prototype.pings = function(index, obj) {
+  var offset = this.bb.__offset(this.bb_pos, 4);
+  return offset ? (obj || new Msg.Down.Vec3).__init(this.bb.__vector(this.bb_pos + offset) + index * 12, this.bb) : null;
+};
+
+/**
+ * @returns {number}
+ */
+Msg.Down.RadarArcUpdate.prototype.pingsLength = function() {
+  var offset = this.bb.__offset(this.bb_pos, 4);
+  return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
+};
+
+/**
+ * @param {flatbuffers.Builder} builder
+ */
+Msg.Down.RadarArcUpdate.startRadarArcUpdate = function(builder) {
+  builder.startObject(1);
+};
+
+/**
+ * @param {flatbuffers.Builder} builder
+ * @param {flatbuffers.Offset} pingsOffset
+ */
+Msg.Down.RadarArcUpdate.addPings = function(builder, pingsOffset) {
+  builder.addFieldOffset(0, pingsOffset, 0);
+};
+
+/**
+ * @param {flatbuffers.Builder} builder
+ * @param {number} numElems
+ */
+Msg.Down.RadarArcUpdate.startPingsVector = function(builder, numElems) {
+  builder.startVector(12, numElems, 4);
+};
+
+/**
+ * @param {flatbuffers.Builder} builder
+ * @returns {flatbuffers.Offset}
+ */
+Msg.Down.RadarArcUpdate.endRadarArcUpdate = function(builder) {
   var offset = builder.endObject();
   return offset;
 };

@@ -11,6 +11,8 @@ function makeLayout(ports) {
 	return div("body",
 		ports	.filter(p=>p.type=="hackEV")
 			.map(p=>hackEV3DView(p)),
+		ports	.filter(p=>p.type=="radarArc")
+			.map(p=>radarView(p)),
 		ports	.filter(p=>p.type=="la")
 			.map(p=>locationArray(p)),
 		ports	.filter(p=>p.type=="wire")
@@ -62,6 +64,26 @@ function locationArray(laPort) {
 		10,
 	);
 	return svgGui;
+}
+
+function radarView(radarArcPort) {
+	let canvas = div("canvas", {style:"width:1200px;height:800px;"});
+	let ctx = canvas.getContext("2d");
+	
+	function render(time) {
+		canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight;
+		ctx.fillStyle = "#000";
+		ctx.fillRect(0, 0, canvas.width, canvas.height);
+		for (let ping of radarArcPort.pings) {
+			ctx.beginPath();
+			ctx.arc(canvas.width/2+ping[0], canvas.height/2-ping[1], 2, 0, 2 * Math.PI, false);
+			ctx.fillStyle = '#8f0';
+			ctx.fill();
+		}
+		requestAnimationFrame(render);
+	}
+	requestAnimationFrame(render);
+	return canvas;
 }
 
 function hackEV3DView(hackEVPort) {

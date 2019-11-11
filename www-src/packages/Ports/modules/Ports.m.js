@@ -92,9 +92,7 @@ class HackEV extends Port { // Hack Entity View
 		super(send, id,"hackEV");
 		this.entities = [];
 	}
-	receiveMessage(bytes) {
-		let msg = Msg.Down.DownMsg.getRootAsDownMsg(new flatbuffers.ByteBuffer(bytes));
-		let updateMsg = msg.content(new Msg.Down.HackEVUpdate());
+	receiveMessage(updateMsg) {
 		let entities = [];
 		for (let i=0; i<updateMsg.entitiesLength(); i++) {
 			let entity = updateMsg.entities(i);
@@ -111,7 +109,26 @@ class HackEV extends Port { // Hack Entity View
 				});
 		}
 		this.entities = entities;
-		console.log(this.entities);
+	}
+}
+
+export
+class RadarArc extends Port {
+	constructor(send, id) {
+		super(send, id,"radarArc");
+		this.pings = [];
+	}
+	receiveMessage(updateMsg) {
+		let pings = [];
+		for (let i=0; i<updateMsg.pingsLength(); i++) {
+			let ping = updateMsg.pings(i);
+			pings.push(	[ ping.x()
+				, ping.y()
+				, ping.z()
+				]
+			);
+		}
+		this.pings = pings;
 	}
 }
 
@@ -126,6 +143,7 @@ function portBuilder(send) {
 	ob.wire = () => {ports.push(new Wire(send,nextID++)); return ob;};
 	ob.la = () => {ports.push(new LA(send,nextID++)); return ob;};
 	ob.hackEV = () => {ports.push(new HackEV(send,nextID++)); return ob;};
+	ob.radarArc = () => {ports.push(new RadarArc(send,nextID++)); return ob;};
 	return ob;
 }
 

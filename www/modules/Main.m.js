@@ -8,8 +8,12 @@ function startNetworking() {
 	ws.addEventListener("open",e=>console.log("Open ",e));
 	ws.addEventListener("error",e=>console.log("Error ",e));
 	ws.addEventListener("message",e=>{
-		e.data.arrayBuffer().then(d=>new Uint8Array(d)).then(d=>{
-			hackEVPort.receiveMessage(d);
+		e.data.arrayBuffer().then(d=>new Uint8Array(d)).then(bytes=>{
+			let msg = Msg.Down.DownMsg.getRootAsDownMsg(new flatbuffers.ByteBuffer(bytes));
+			if (msg.contentType()==Msg.Down.MsgContent.HackEVUpdate)
+				hackEVPort.receiveMessage(msg.content(new Msg.Down.HackEVUpdate()));
+			if (msg.contentType()==Msg.Down.MsgContent.RadarArcUpdate)
+				radarArcPort.receiveMessage(msg.content(new Msg.Down.RadarArcUpdate()));
 		});
 	});
 	ws.addEventListener("close",e=>console.log("Close ",e));
@@ -53,6 +57,7 @@ function networkFloat(value,bits,signed=true,value100=1) {
 startNetworking();
 
 let hackEVPort;
+let radarArcPort;
 let iframe = div("iframe");
 document.body.appendChild(iframe);
 setTimeout(()=>iframe.contentDocument.body.parentElement.replaceChild(
@@ -60,6 +65,7 @@ setTimeout(()=>iframe.contentDocument.body.parentElement.replaceChild(
 		.wire()
 		.wire()
 		.hackEV().ref(r=>hackEVPort=r)
+		.radarArc().ref(r=>radarArcPort=r)
 		.done()
 	),
 	iframe.contentDocument.body

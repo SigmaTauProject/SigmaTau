@@ -58,6 +58,11 @@ newShip world networkConnection = do
 					(Just $ 0)
 				)
 			$ rawEntities
+		let radarMsg	= downMsg
+			$ msgContentRadarArcUpdate $ radarArcUpdate
+			$ Just $ FB.fromList'
+			$ fmap (\(pos,ori)->toNetVec $ unP pos)
+			$ rawEntities
 		withAll activeConnections (\con@(Connection chan downMsgChan)->do
 				forTChan chan (\msg->sequence_ $ do
 						content <- upMsgContent msg
@@ -78,6 +83,7 @@ newShip world networkConnection = do
 									sequence_ $ modifyIORef' <$> (thrusterPower <$> thrusters !? fromIntegral id) <*> pure (\tv->tv + value)
 					)
 				atomically $ writeTChan downMsgChan entitiesMsg
+				atomically $ writeTChan downMsgChan radarMsg
 			)
 		
 		forceEntity world entity =<< foldl' (+) (V3 0 0 0) <$> (sequence $ (\(Thruster powerRef effect)->(*^ effect) <$> readIORef powerRef) <$> thrusters)
