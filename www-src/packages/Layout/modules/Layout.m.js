@@ -76,7 +76,7 @@ function radarView(radarArcPort) {
 		ctx.fillRect(0, 0, canvas.width, canvas.height);
 		for (let ping of radarArcPort.pings) {
 			ctx.beginPath();
-			ctx.arc(canvas.width/2+ping[0], canvas.height/2-ping[1], 2, 0, 2 * Math.PI, false);
+			ctx.arc(canvas.width/2+ping[1], canvas.height/2-ping[0], 2, 0, 2 * Math.PI, false);
 			ctx.fillStyle = '#8f0';
 			ctx.fill();
 		}
