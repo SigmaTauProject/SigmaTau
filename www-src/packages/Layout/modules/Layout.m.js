@@ -87,92 +87,36 @@ function radarView(radarArcPort) {
 }
 
 function hackEV3DView(hackEVPort) {
-	const canvas = div("canvas", {style:"width:1200px;height:800px;"});
-	const gl = canvas.getContext("webgl");
-	if (!gl) gl = canvas.getContext("experimental-webgl");
-	const programInfo = twgl.createProgramInfo(gl,
-		[`	
-uniform mat4 worldViewProjection;
-attribute vec4 position;
-void main() {
-	gl_Position = worldViewProjection * position;
-}
-		`,
-		`
-void main() {
-	gl_FragColor = vec4(0.7,0.7,0.7,1);
-}
-		`]
-	);
+	var renderer = new THREE.WebGLRenderer();
+	var canvas = renderer.domElement;
+	canvas.style = "width:1200px;height:1200px";
+	renderer.setClearColor("#808080");
 	
-	gl.clearColor(0,0,0,1);
-	gl.enable(gl.DEPTH_TEST);
-	gl.enable(gl.CULL_FACE);
-	const projection = mat4.mul
-		( mat4.create()
-		, mat4.perspective	( mat4.create()
-			, 90 * Math.PI / 180// FOV
-			////, gl.canvas.clientWidth / gl.canvas.clientHeight// aspect
-			, 1// aspect
-			, 0.1// near
-			, 1000// far
-			)
-		, new Float32Array([0,0,-1,0, 1,0,0,0, 0,1,0,0, 0,0,0,1])
-		);
+	var scene = new THREE.Scene();
+	var camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+	camera.position.z = 5;
 	
-	const arrays = {
-		position:	[1.4	, 0	, 0
-			, -0.7	, 1	, 0
-			, -0.7	, -0.7	, 0
-			, -1	, 0	, 1
-			],
-		indices:	[ 0	, 2	, 1
-			, 0	, 3	, 2
-			, 0	, 1	, 3
-			, 1	, 2	, 3
-			],
-	};
-	const bufferInfo = twgl.createBufferInfoFromArrays(gl, arrays);
-	const tex = twgl.createTexture(gl, {
-		min: gl.NEAREST,
-		mag: gl.NEAREST,
-		src: [
-			255, 255, 255, 255,
-			192, 192, 192, 255,
-			192, 192, 192, 255,
-			255, 255, 255, 255,
-		],
+	////var geo = new THREE.SphereGeometry( 1,10,10 );
+	////var mat = new THREE.MeshLambertMaterial({color: 0xF7F7F7});
+	////var cube = new THREE.Mesh( geo, mat );
+	////scene.add( cube );
+	
+	var loader = new THREE.OBJLoader()
+	loader.load("models/ship.obj", (object)=>{
+		scene.add(object);
 	});
-	function render(time) {
-		time *= 0.001;
-		{
-			canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight;
-			gl.viewport(0, 0, canvas.width, canvas.height);
-		}
-		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+	
+	var directionalLight = new THREE.DirectionalLight( 0xff0000, 0.5 );
+	directionalLight.position.set(5,3,10);
+	scene.add( directionalLight );
+	
+	function render() {
+		renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+		camera.aspect = canvas.clientWidth / canvas.clientHeight;
+		camera.updateProjectionMatrix();
 		
-		const viewingSize = (canvas.clientWidth + canvas.clientHeight) / 2;
-		const view = mat4.mul	( mat4.create()
-			, mat4.fromScaling(mat4.create(), [1,viewingSize/canvas.clientWidth,viewingSize/canvas.clientHeight])
-			, mat4.mul	( mat4.create()
-				, mat4.fromYRotation(mat4.create(), -Math.PI/2)
-				, mat4.fromTranslation(mat4.create(), vec3.fromValues(0,0,-64))
-				)
-			);
-		gl.useProgram(programInfo.program);
-		for (let entity of hackEVPort.entities) {
-			////const world = mat4.fromZRotation(mat4.create(),time);
-			const world = mat4.mul	( mat4.create()
-				, mat4.fromTranslation(mat4.create(),vec3.fromValues(entity.pos[0],entity.pos[1],0))
-				, mat4.fromQuat(mat4.create(), [entity.ori[1],entity.ori[2],entity.ori[3],entity.ori[0]])
-				);
-			const viewProjection = mat4.mul(mat4.create(), projection, view);
-			twgl.setUniforms(programInfo, {
-				worldViewProjection : mat4.mul(mat4.create(), viewProjection, world)
-			});
-			twgl.setBuffersAndAttributes(gl, programInfo, bufferInfo);
-			gl.drawElements(gl.TRIANGLES, bufferInfo.numElements, gl.UNSIGNED_SHORT, 0);
-		}
+		renderer.render(scene, camera);
+		
 		requestAnimationFrame(render);
 	}
 	requestAnimationFrame(render);
