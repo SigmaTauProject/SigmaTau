@@ -5,6 +5,8 @@ import {cell} from "/modules/FRP/Cell.m.js";
 
 import {Port,Wire} from "/modules/Ports.m.js";
 
+import {PerspectiveCamera} from "./Camera.m.js";
+
 
 export default
 function makeLayout(ports) {
