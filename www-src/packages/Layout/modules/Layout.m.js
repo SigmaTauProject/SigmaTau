@@ -89,39 +89,75 @@ function radarView(radarArcPort) {
 }
 
 function hackEV3DView(hackEVPort) {
-	var renderer = new THREE.WebGLRenderer();
+	var renderer = new THREE.WebGLRenderer({antialias:true});
 	var canvas = renderer.domElement;
+	var loader = new THREE.OBJLoader();
 	canvas.style = "width:1200px;height:1200px";
-	renderer.setClearColor("#808080");
+	renderer.setClearColor("#000000");
 	
-	var scene = new THREE.Scene();
+	var outerScene = new THREE.Scene();
+	var scene = new THREE.Group();
+	outerScene.add(scene);
+	scene.matrixAutoUpdate = false;
+	scene.matrix.fromArray(new Float32Array([0,0,-1,0, 1,0,0,0, 0,1,0,0, 0,0,0,1]))
+	////var camera = new PerspectiveCamera(75, 1, 0.1, 1000);
+	////scene.add(camera);
+	////camera.position.z = 2*2;
+	////camera.position.y = 0.5*2;
+	////camera.position.x = -2*2;
+	////camera.rotation.y = 0.8;
+	////var camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+	////scene.add(camera);
+	////camera.position.z = 2*8;
+	////camera.position.y = 0.5*8;
+	////camera.position.x = -2*8;
+	////camera.rotation.y = 0.8;
 	var camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
-	camera.position.z = 5;
+	camera.position.z = 2*8;
+	camera.position.y = 2*8;
+	camera.position.x = 0.5*8;
+	camera.rotation.x = -0.8;
 	
-	////var geo = new THREE.SphereGeometry( 1,10,10 );
-	////var mat = new THREE.MeshLambertMaterial({color: 0xF7F7F7});
-	////var cube = new THREE.Mesh( geo, mat );
-	////scene.add( cube );
 	
-	var loader = new THREE.OBJLoader()
-	loader.load("models/ship.obj", (object)=>{
-		scene.add(object);
-	});
+	////var axesHelper = new THREE.AxesHelper( 5 );
+	////scene.add( axesHelper );
 	
 	var directionalLight = new THREE.DirectionalLight( 0xff0000, 0.5 );
 	directionalLight.position.set(5,3,10);
 	scene.add( directionalLight );
+	var pointLight = new THREE.PointLight( 0x00ff00, 0.25, 100 );
+	pointLight.position.set(-5,-3,-10);
+	scene.add( pointLight );
+	
+	var shipTemplate;
+	var ships = [];
+	
+	loader.load("models/ship.obj", (object)=>{
+		shipTemplate = object;
+		requestAnimationFrame(render);
+	});
 	
 	function render() {
 		renderer.setSize(canvas.clientWidth, canvas.clientHeight);
 		camera.aspect = canvas.clientWidth / canvas.clientHeight;
 		camera.updateProjectionMatrix();
 		
-		renderer.render(scene, camera);
+		hackEVPort.entities.forEach((entity, index)=>{
+			while (ships.length <= index) {
+				let s = shipTemplate.clone();
+				scene.add(s);
+				ships.push(s);
+			}
+			let ship = ships[index];
+			ship.position.fromArray(entity.pos);
+			////ship.position.multiplyScalar(0.2);
+			ship.quaternion.fromArray([entity.ori[1],entity.ori[2],entity.ori[3],entity.ori[0]]);
+		});
+		
+		renderer.render(outerScene, camera);
 		
 		requestAnimationFrame(render);
 	}
-	requestAnimationFrame(render);
 	
 	return canvas;
 }
