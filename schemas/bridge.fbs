@@ -2,8 +2,8 @@ namespace Msg.Bridge;
 
 enum PortType : uint16	{ Wire
 	, LA
-	, HackEV
 	, RadarArc
+	, HackEV
 	}
 
 table AddPorts {
