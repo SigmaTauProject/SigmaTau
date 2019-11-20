@@ -19,9 +19,6 @@ import Network.TerminalServer
 import Data.Lifetime
 import Network.TerminalConnection
 
-import FlatBuffers
-import Data.Msg.Up as UM
-
 
 main = withDRuntime $ do
 	world <- newWorld

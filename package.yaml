@@ -40,12 +40,14 @@ internal-libraries:
       - Network.TerminalConnection
     dependencies:
       - stm
-      - msg
+      - bytestring
   msg:
     source-dirs: src-network/msg
     exposed-modules:
-      - Data.Msg.Up
       - Data.Msg.Down
+      - Data.Msg.Common
+      - Data.Msg.Wire
+      - Data.Msg.RadarArc
     dependencies:
       - flatbuffers
   terminal-web-server:
@@ -64,8 +66,6 @@ internal-libraries:
       - stm
       
       - terminal-connection
-      - flatbuffers
-      - msg
       - lifetime
   #---World
   world:
@@ -88,10 +88,12 @@ internal-libraries:
       - lifetime-set
       - terminal-connection
       - flatbuffers
+      - cereal
       - msg
       - world
       - stm
       - linear
+      - bytestring
     
 
 executable:
@@ -105,6 +107,4 @@ executable:
     - linear
     - lifetime
     - terminal-connection
-    - flatbuffers
-    - msg
     - terminal-web-server
