@@ -20,10 +20,14 @@ import Data.Lifetime.Set
 
 import Data.Word
 
+import Data.ByteString.Lazy (append)
+import Data.Serialize.Put (runPutLazy,putWord32le)
 import FlatBuffers
 import qualified FlatBuffers.Vector as FB
-import Data.Msg.Up as UM
-import Data.Msg.Down as DM
+import Data.Msg.Common as Common
+import Data.Msg.Bridge as Bridge
+import Data.Msg.Wire as Wire
+import Data.Msg.RadarArc as RadarArc
 
 type NetworkConnection = (TChan (Lifetime Connection))
 
@@ -43,47 +47,62 @@ newShip world networkConnection = do
 	thrusters <- sequence $ [makeThruster (V3 1 0 0), makeThruster (V3 0 1 0)]
 	
 	return $ do
-		forTChan networkConnection $ (\con->do
+		forTChan networkConnection $ (\con -> do
 				putStrLn "Con!"
 				add activeConnections con
+				with_ con (\(Connection upMsgChan downMsgChan) -> do
+						atomically $ writeTChan downMsgChan $ DownMsg
+							$ append (runPutLazy $ putWord32le 0)
+							$ encode
+							$ Bridge.downMsg
+							$ Bridge.downMsgContentAddPorts
+							$ Bridge.addPorts
+							$ Just $ FB.fromList'
+							$ map Bridge.fromPortType
+							$ (take 2 $ repeat $ Bridge.PortTypeWire)
+							++ [Bridge.PortTypeRadarArc]
+							++ [Bridge.PortTypeHackEV]
+					)
 			)
 		
 		rawEntities <- mapEntities world (\e->(,) <$> getEntityPos world entity e <*> getEntityOri world entity e)
-		let entitiesMsg	= downMsg
-			$ msgContentHackEVUpdate $ hackEVUpdate
-			$ Just $ FB.fromList'
-			$ fmap (\(pos,ori)->hackEVEntity
-					(Just $ toNetVec $ unP pos)
-					(Just $ toNetQuat $ ori)
-					(Just $ 0)
-				)
-			$ rawEntities
-		let radarMsg	= downMsg
-			$ msgContentRadarArcUpdate $ radarArcUpdate
+		----let entitiesMsg	= downMsg
+		----	$ msgContentHackEVUpdate $ hackEVUpdate
+		----	$ Just $ FB.fromList'
+		----	$ fmap (\(pos,ori)->hackEVEntity
+		----			(Just $ toNetVec $ unP pos)
+		----			(Just $ toNetQuat $ ori)
+		----			(Just $ 0)
+		----		)
+		----	$ rawEntities
+		let radarMsg	= append (runPutLazy $ putWord32le 3)
+			$ encode
+			$ RadarArc.downMsg
+			$ RadarArc.downMsgContentUpdate $ RadarArc.update
 			$ Just $ FB.fromList'
 			$ fmap (\(pos,ori)->toNetVec $ unP pos)
 			$ rawEntities
 		withAll activeConnections (\con@(Connection chan downMsgChan)->do
-				forTChan chan (\msg->sequence_ $ do
-						content <- upMsgContent msg
-						case content of
-							Union (MsgContentWireSet wireSet) -> do
-								id <- wireSetId wireSet
-								value <- unnetworkFloat <$> wireSetValue wireSet
-								return $ do
-									print id
-									print value
-									sequence_ $ writeIORef <$> (thrusterPower <$> thrusters !? fromIntegral id) <*> pure value
-							Union (MsgContentWireAdjust wireAdjust) -> do
-								id <- wireAdjustId wireAdjust
-								value <- unnetworkFloat <$> wireAdjustValue wireAdjust
-								return $ do
-									print id
-									print value
-									sequence_ $ modifyIORef' <$> (thrusterPower <$> thrusters !? fromIntegral id) <*> pure (\tv->tv + value)
-					)
-				atomically $ writeTChan downMsgChan entitiesMsg
-				atomically $ writeTChan downMsgChan radarMsg
+				----forTChan chan (\msg->sequence_ $ do
+				----		content <- upMsgContent msg
+				----		case content of
+				----			Union (MsgContentWireSet wireSet) -> do
+				----				id <- wireSetId wireSet
+				----				value <- unnetworkFloat <$> wireSetValue wireSet
+				----				return $ do
+				----					print id
+				----					print value
+				----					sequence_ $ writeIORef <$> (thrusterPower <$> thrusters !? fromIntegral id) <*> pure value
+				----			Union (MsgContentWireAdjust wireAdjust) -> do
+				----				id <- wireAdjustId wireAdjust
+				----				value <- unnetworkFloat <$> wireAdjustValue wireAdjust
+				----				return $ do
+				----					print id
+				----					print value
+				----					sequence_ $ modifyIORef' <$> (thrusterPower <$> thrusters !? fromIntegral id) <*> pure (\tv->tv + value)
+				----	)
+				----atomically $ writeTChan downMsgChan entitiesMsg
+				atomically $ writeTChan downMsgChan $ DownMsg radarMsg
 			)
 		
 		forceEntity world entity =<< foldl' (+) (V3 0 0 0) <$> (sequence $ (\(Thruster powerRef effect)->(*^ effect) <$> readIORef powerRef) <$> thrusters)

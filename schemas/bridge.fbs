@@ -1,0 +1,24 @@
+namespace Msg.Bridge;
+
+enum PortType : uint16	{ Wire
+	, LA
+	, RadarArc
+	, HackEV
+	}
+
+table AddPorts {
+	ports	:	[PortType]	;
+}
+table RemovePorts {
+	ports	:	[uint32]	;
+}
+
+union DownMsgContent
+{ AddPorts
+, RemovePorts
+}
+
+table DownMsg {
+	content	:	DownMsgContent	;
+}
+

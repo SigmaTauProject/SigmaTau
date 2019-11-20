@@ -1,5 +1,5 @@
 import {div,Div} from "/modules/Div.m.js";
-import {portBuilder,Port,Wire} from "/modules/Ports.m.js";
+import {portBuilder,Bridge} from "/modules/Ports.m.js";
 import makeLayout from "./Layout.m.js";
 
 function startNetworking() {
@@ -8,13 +8,7 @@ function startNetworking() {
 	ws.addEventListener("open",e=>console.log("Open ",e));
 	ws.addEventListener("error",e=>console.log("Error ",e));
 	ws.addEventListener("message",e=>{
-		e.data.arrayBuffer().then(d=>new Uint8Array(d)).then(bytes=>{
-			let msg = Msg.Down.DownMsg.getRootAsDownMsg(new flatbuffers.ByteBuffer(bytes));
-			if (msg.contentType()==Msg.Down.MsgContent.HackEVUpdate)
-				hackEVPort.receiveMessage(msg.content(new Msg.Down.HackEVUpdate()));
-			if (msg.contentType()==Msg.Down.MsgContent.RadarArcUpdate)
-				radarArcPort.receiveMessage(msg.content(new Msg.Down.RadarArcUpdate()));
-		});
+		e.data.arrayBuffer().then(d=>bridge.handleMessage(d));
 	});
 	ws.addEventListener("close",e=>console.log("Close ",e));
 	
@@ -56,20 +50,23 @@ function networkFloat(value,bits,signed=true,value100=1) {
 ////let [componentsPush,controls] = makeLayout();
 startNetworking();
 
-let hackEVPort;
-let radarArcPort;
-let iframe = div("iframe");
-document.body.appendChild(iframe);
-setTimeout(()=>iframe.contentDocument.body.parentElement.replaceChild(
-	makeLayout(	portBuilder(send)
-		.wire()
-		.wire()
-		.hackEV().ref(r=>hackEVPort=r)
-		.radarArc().ref(r=>radarArcPort=r)
-		.done()
-	),
-	iframe.contentDocument.body
-));
+let bridge = new Bridge(send);
+
+////let hackEVPort;
+////let radarArcPort;
+////let iframe = div("iframe");
+////document.body.appendChild(iframe);
+////setTimeout(()=>iframe.contentDocument.body.parentElement.replaceChild(
+////	makeLayout(	portBuilder(send)
+////		.wire()
+////		.wire()
+////		.hackEV().ref(r=>hackEVPort=r)
+////		.radarArc().ref(r=>radarArcPort=r)
+////		.done()
+////	),
+////	iframe.contentDocument.body
+////));
+
 ////iframe.contentDocument.bodyj.appendChild(controls);
 ////document.body.appendChild(iframe);
 ////

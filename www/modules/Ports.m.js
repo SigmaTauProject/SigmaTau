@@ -118,20 +118,65 @@ class RadarArc extends Port {
 		super(send, id,"radarArc");
 		this.pings = cell([]);
 	}
-	receiveMessage(updateMsg) {
-		let pings = [];
-		for (let i=0; i<updateMsg.pingsLength(); i++) {
-			let ping = updateMsg.pings(i);
-			pings.push(	[ ping.x()
-				, ping.y()
-				, ping.z()
-				]
-			);
+	receiveMessage(bytes) {
+		let msg = Msg.RadarArc.DownMsg.getRootAsDownMsg(new flatbuffers.ByteBuffer(bytes));
+		if (msg.contentType() == Msg.RadarArc.DownMsgContent.Update) {
+			let updateMsg = msg.content(new Msg.RadarArc.Update());
+			let pings = [];
+			for (let i=0; i<updateMsg.pingsLength(); i++) {
+				let ping = updateMsg.pings(i);
+				pings.push(	[ ping.x()
+					, ping.y()
+					, ping.z()
+					]
+				);
+			}
+			this.pings.change(pings);
 		}
-		this.pings.change(pings);
 	}
 }
 
+export
+class Bridge  extends Port {
+	constructor(send) {
+		super(send,0,"bridge");
+		this.ports = [this];
+	}
+	handleMessage(dataBuffer) {
+		let portID = new Uint32Array(dataBuffer)[0];
+		let bytes = new Uint8Array(dataBuffer).slice(4);
+		if (portID < this.ports.length) 
+			this.ports[portID].receiveMessage(bytes);
+	}
+	receiveMessage(bytes) {
+		let msg = Msg.Bridge.DownMsg.getRootAsDownMsg(new flatbuffers.ByteBuffer(bytes));
+		if (msg.contentType() == Msg.Bridge.DownMsgContent.AddPorts) {
+			let innerMsg = msg.content(new Msg.Bridge.AddPorts());
+			for (let i=0; i<innerMsg.portsLength(); i++) {
+				let port = innerMsg.ports(i);
+				this.ports.push(	(()=>{
+						if (port==Msg.Bridge.PortType.Wire)
+							return new Wire(this.send, this.ports.length);
+						if (port==Msg.Bridge.PortType.LA)
+							return new LA(this.send, this.ports.length);
+						if (port==Msg.Bridge.PortType.RadarArc)
+							return new RadarArc(this.send, this.ports.length);
+						if (port==Msg.Bridge.PortType.HackEV)
+							return new HackEV(this.send, this.ports.length);
+					})()
+				);
+			}
+		}
+		else if (msg.contentType() == Msg.Bridge.DownMsgContent.RemovePorts) {
+			let innerMsg = msg.content(new Msg.Bridge.RemovePorts());
+			let removePorts = [];
+			for (let i=0; i<innerMsg.portsLength(); i++) {
+				let port = innerMsg.ports(i);
+				this.ports.splice(port,1);
+			}
+		}
+	}
+}
 
 export
 function portBuilder(send) {
