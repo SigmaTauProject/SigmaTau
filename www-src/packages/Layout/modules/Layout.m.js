@@ -72,19 +72,18 @@ function radarView(radarArcPort) {
 	let canvas = div("canvas", {style:"width:1200px;height:800px;"});
 	let ctx = canvas.getContext("2d");
 	
-	function render(time) {
+	radarArcPort.pings.forEach(render);
+	function render(pings) {
 		canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight;
 		ctx.fillStyle = "#000";
 		ctx.fillRect(0, 0, canvas.width, canvas.height);
-		for (let ping of radarArcPort.pings) {
+		for (let ping of pings) {
 			ctx.beginPath();
 			ctx.arc(canvas.width/2+ping[1], canvas.height/2-ping[0], 2, 0, 2 * Math.PI, false);
 			ctx.fillStyle = '#8f0';
 			ctx.fill();
 		}
-		requestAnimationFrame(render);
 	}
-	requestAnimationFrame(render);
 	return canvas;
 }
 
@@ -130,19 +129,24 @@ function hackEV3DView(hackEVPort) {
 	scene.add( pointLight );
 	
 	var shipTemplate;
+	var loaded = false;
 	var ships = [];
 	
 	loader.load("models/ship.obj", (object)=>{
 		shipTemplate = object;
-		requestAnimationFrame(render);
+		loaded = true;
 	});
 	
-	function render() {
+	hackEVPort.entities.forEach(render);
+	
+	function render(entities) {
+		if (!loaded) return;
+		
 		renderer.setSize(canvas.clientWidth, canvas.clientHeight);
 		camera.aspect = canvas.clientWidth / canvas.clientHeight;
 		camera.updateProjectionMatrix();
 		
-		hackEVPort.entities.forEach((entity, index)=>{
+		entities.forEach((entity, index)=>{
 			while (ships.length <= index) {
 				let s = shipTemplate.clone();
 				scene.add(s);
@@ -155,8 +159,6 @@ function hackEV3DView(hackEVPort) {
 		});
 		
 		renderer.render(outerScene, camera);
-		
-		requestAnimationFrame(render);
 	}
 	
 	return canvas;

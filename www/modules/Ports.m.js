@@ -90,7 +90,7 @@ export
 class HackEV extends Port { // Hack Entity View
 	constructor(send, id) {
 		super(send, id,"hackEV");
-		this.entities = [];
+		this.entities = cell([]);
 	}
 	receiveMessage(updateMsg) {
 		let entities = [];
@@ -108,7 +108,7 @@ class HackEV extends Port { // Hack Entity View
 				, meshID	:entity.mesh()
 				});
 		}
-		this.entities = entities;
+		this.entities.change(entities);
 	}
 }
 
@@ -116,7 +116,7 @@ export
 class RadarArc extends Port {
 	constructor(send, id) {
 		super(send, id,"radarArc");
-		this.pings = [];
+		this.pings = cell([]);
 	}
 	receiveMessage(updateMsg) {
 		let pings = [];
@@ -128,7 +128,7 @@ class RadarArc extends Port {
 				]
 			);
 		}
-		this.pings = pings;
+		this.pings.change(pings);
 	}
 }
 
