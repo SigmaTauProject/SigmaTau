@@ -44,8 +44,8 @@ internal-libraries:
   msg:
     source-dirs: src-network/msg
     exposed-modules:
-      - Data.Msg.Down
       - Data.Msg.Common
+      - Data.Msg.Bridge
       - Data.Msg.Wire
       - Data.Msg.RadarArc
     dependencies:

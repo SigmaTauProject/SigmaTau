@@ -24,8 +24,8 @@ import Data.ByteString.Lazy (append)
 import Data.Serialize.Put (runPutLazy,putWord32le)
 import FlatBuffers
 import qualified FlatBuffers.Vector as FB
-import Data.Msg.Down as Down
 import Data.Msg.Common as Common
+import Data.Msg.Bridge as Bridge
 import Data.Msg.Wire as Wire
 import Data.Msg.RadarArc as RadarArc
 
