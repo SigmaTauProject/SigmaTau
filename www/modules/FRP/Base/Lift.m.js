@@ -18,12 +18,12 @@ function lift(f) {
 		
 		if (streamArgs.length > 0) {
 			console.assert(streamArgs.length==1 || compareRoots(...streamArgs)==same);
-			let n = makeStream(null,Symbol);
+			let n = makeStream(null,Symbol());
 			forStreamRoot(n._root, n.nodeIdentifier);
 			return n;
 		}
 		else {
-			let pushArgs = args.filter(a=>!(a instanceof PC.Cell));
+			let pushArgs = args.filter(a=>(a instanceof Cell || a instanceof HC.Cell));
 			let roots = [pushArgs[0]._root];
 			pushArgs.tail().forEach((a,i)=>{
 				if (!pushArgs.slice(0,i).any(t=>compareRoots(a._root,t._root)==same))
@@ -31,7 +31,13 @@ function lift(f) {
 			});
 			
 			let nnid=Symbol();
-			let n = new Cell(f(...args.map(a=>(a instanceof Cell)?a.initial:a.grab())),joinRoots(nnid,roots),nnid);
+			let n = new Cell(f(...args.map(a=>
+				(a instanceof Cell)
+				?a.initial
+				:	((a instanceof PC.Cell || a instanceof HC.Cell)
+					?a.grab()
+					:a/*assume constant*/)
+			)),joinRoots(nnid,roots),nnid);
 			roots.forEach(r=>forStreamRoot(r, nnid));
 			return n;
 		}
@@ -54,7 +60,7 @@ function lift(f) {
 			});
 			streamRoot.addNode(scope=>scope[nnid]=f(...retrieveArgs.map(ra=>ra(scope))));
 		}
-	}
+	};
 }
 
 

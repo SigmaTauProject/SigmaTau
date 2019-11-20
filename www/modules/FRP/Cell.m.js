@@ -6,6 +6,8 @@ import {} from "./Base/CellToHybrid.m.js";
 import {} from "./Base/CellSwitch.m.js";
 import {} from "./Base/CellReduce.m.js";
 import {promiseToCell} from "./Promise/CellPromise.m.js";
+import {cellEl} from "./El/CellEl.m.js";
+import {asCell} from "./As/AsCell.m.js";
 
 import	{ ConstantCell,constantCell,
 	  RootConstantChangingCell,ConstantChangingCell,constantChangingCell,
@@ -14,6 +16,7 @@ import	{ ConstantCell,constantCell,
 import {} from "./Constant/CellWithConstant.m.js";
 import {} from "./Constant/CellToConstantPull.m.js";
 import {} from "./Constant/CellToConstantStream.m.js";
+import {} from "./Constant/CellSwitch.m.js";
 
 import {map} from "./Base/Shared.m.js";
 import {lift} from "./Base/Lift.m.js";
@@ -29,5 +32,7 @@ export {
 	promiseToCell,
 	map,
 	lift,
+	cellEl,
+	asCell,
 }
 

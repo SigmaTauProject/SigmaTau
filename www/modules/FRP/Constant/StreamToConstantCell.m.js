@@ -7,7 +7,10 @@ NeverStream.prototype.hold = function(initial) {
 }
 
 ConstantStream.prototype.hold = function(initial) {
-	return makeConstantChangingCell(initial,this._root,this.nodeIdentifier);
+	if (initial == this.value)
+		return makeConstantChangingCell(initial,this._root,this.nodeIdentifier);
+	else
+		return EnumStream.prototype.hold.bind(this)(initial);
 }
 
 EnumStream.prototype.hold = function(initial) {

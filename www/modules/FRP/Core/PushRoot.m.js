@@ -69,7 +69,7 @@ function joinRootsMap(nodeIdentifier,rootIdentifierPairs) {
 	rootIdentifierPairs = new Set(rootIdentifierPairs);
 	let roots = rootIdentifierPairs.concatMap(([r,id])=>r.constructor == JoinedRoot?r.roots.map(ir=>mapRoot(ir,id,nodeIdentifier)):[mapRoot(r,id,nodeIdentifier)]);
 	if (roots.size>1)
-		return new JoinedRoot(roots);
+		return new JoinedRoot(roots,nodeIdentifier);
 	else
 		return [...roots][0];
 }
