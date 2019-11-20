@@ -18,13 +18,11 @@ import Network.WebSockets
 
 import Data.ByteString.Lazy (fromStrict, toStrict)
 
-import FlatBuffers
-import Data.Msg.Up
-import Data.Msg.Down
+import Network.TerminalConnection hiding (Connection)
 import qualified Network.TerminalConnection as Terminal (Connection(Connection))
 import Data.Lifetime
 
-runTerminal :: TChan (Table UpMsg) -> TChan (WriteTable DownMsg) -> Connection -> IO ()
+runTerminal :: TChan UpMsg -> TChan DownMsg -> Connection -> IO ()
 runTerminal upMsgChan downMsgChan connection = do
 	putStrLn "New Connection"
 	----sendChannel <- newChan
@@ -37,14 +35,14 @@ runTerminal upMsgChan downMsgChan connection = do
 			putStr "recieved: "
 			print dataMsg
 			case dataMsg of
-				(Binary d) -> sequence_ $ atomically . writeTChan upMsgChan <$> decode d
+				(Binary d) -> atomically . writeTChan upMsgChan $ UpMsg d
 				(Text _ _) -> return ()
 	----let con = Terminal.Connection upMsgChan
 	----return $ Lifetime (return $ Just $ con)
 	--writing thread
 	forever $ do
-		msg <- atomically $ readTChan downMsgChan
-		sendDataMessage connection (Binary $ encode msg)
+		(DownMsg msgData) <- atomically $ readTChan downMsgChan
+		sendDataMessage connection $ Binary msgData
 	----sequence_ =<< fmap (sendDataMessage connection . Binary . fromStrict . serializeDownMsg) <$> getChanContents sendChannel
 
 
