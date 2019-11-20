@@ -47,9 +47,22 @@ newShip world networkConnection = do
 	thrusters <- sequence $ [makeThruster (V3 1 0 0), makeThruster (V3 0 1 0)]
 	
 	return $ do
-		forTChan networkConnection $ (\con->do
+		forTChan networkConnection $ (\con -> do
 				putStrLn "Con!"
 				add activeConnections con
+				with_ con (\(Connection upMsgChan downMsgChan) -> do
+						atomically $ writeTChan downMsgChan $ DownMsg
+							$ append (runPutLazy $ putWord32le 0)
+							$ encode
+							$ Bridge.downMsg
+							$ Bridge.downMsgContentAddPorts
+							$ Bridge.addPorts
+							$ Just $ FB.fromList'
+							$ map Bridge.fromPortType
+							$ (take 2 $ repeat $ Bridge.PortTypeWire)
+							++ [Bridge.PortTypeRadarArc]
+							++ [Bridge.PortTypeHackEV]
+					)
 			)
 		
 		rawEntities <- mapEntities world (\e->(,) <$> getEntityPos world entity e <*> getEntityOri world entity e)
@@ -62,7 +75,7 @@ newShip world networkConnection = do
 		----			(Just $ 0)
 		----		)
 		----	$ rawEntities
-		let radarMsg	= append (runPutLazy $ putWord32le 1)
+		let radarMsg	= append (runPutLazy $ putWord32le 3)
 			$ encode
 			$ RadarArc.downMsg
 			$ RadarArc.downMsgContentUpdate $ RadarArc.update
