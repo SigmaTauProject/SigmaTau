@@ -15,18 +15,17 @@ Msg.Down = Msg.Down || {};
 /**
  * @enum
  */
-Msg.Down.MsgContent = {
-  NONE: 0,
-  LAUpdate: 1,
-  HackEVMesh: 2,
-  HackEVUpdate: 3,
-  RadarArcUpdate: 4
+Msg.Down.PortTypes = {
+  Wire: 0,
+  LA: 1,
+  HackEV: 2,
+  RadarArc: 3
 };
 
 /**
  * @constructor
  */
-Msg.Down.Vec3 = function() {
+Msg.Down.addPorts = function() {
   /**
    * @type {flatbuffers.ByteBuffer}
    */
@@ -41,142 +40,9 @@ Msg.Down.Vec3 = function() {
 /**
  * @param {number} i
  * @param {flatbuffers.ByteBuffer} bb
- * @returns {Msg.Down.Vec3}
+ * @returns {Msg.Down.addPorts}
  */
-Msg.Down.Vec3.prototype.__init = function(i, bb) {
-  this.bb_pos = i;
-  this.bb = bb;
-  return this;
-};
-
-/**
- * @returns {number}
- */
-Msg.Down.Vec3.prototype.x = function() {
-  return this.bb.readFloat32(this.bb_pos);
-};
-
-/**
- * @returns {number}
- */
-Msg.Down.Vec3.prototype.y = function() {
-  return this.bb.readFloat32(this.bb_pos + 4);
-};
-
-/**
- * @returns {number}
- */
-Msg.Down.Vec3.prototype.z = function() {
-  return this.bb.readFloat32(this.bb_pos + 8);
-};
-
-/**
- * @param {flatbuffers.Builder} builder
- * @param {number} x
- * @param {number} y
- * @param {number} z
- * @returns {flatbuffers.Offset}
- */
-Msg.Down.Vec3.createVec3 = function(builder, x, y, z) {
-  builder.prep(4, 12);
-  builder.writeFloat32(z);
-  builder.writeFloat32(y);
-  builder.writeFloat32(x);
-  return builder.offset();
-};
-
-/**
- * @constructor
- */
-Msg.Down.Quaternion = function() {
-  /**
-   * @type {flatbuffers.ByteBuffer}
-   */
-  this.bb = null;
-
-  /**
-   * @type {number}
-   */
-  this.bb_pos = 0;
-};
-
-/**
- * @param {number} i
- * @param {flatbuffers.ByteBuffer} bb
- * @returns {Msg.Down.Quaternion}
- */
-Msg.Down.Quaternion.prototype.__init = function(i, bb) {
-  this.bb_pos = i;
-  this.bb = bb;
-  return this;
-};
-
-/**
- * @returns {number}
- */
-Msg.Down.Quaternion.prototype.a = function() {
-  return this.bb.readInt8(this.bb_pos);
-};
-
-/**
- * @returns {number}
- */
-Msg.Down.Quaternion.prototype.b = function() {
-  return this.bb.readInt8(this.bb_pos + 1);
-};
-
-/**
- * @returns {number}
- */
-Msg.Down.Quaternion.prototype.c = function() {
-  return this.bb.readInt8(this.bb_pos + 2);
-};
-
-/**
- * @returns {number}
- */
-Msg.Down.Quaternion.prototype.d = function() {
-  return this.bb.readInt8(this.bb_pos + 3);
-};
-
-/**
- * @param {flatbuffers.Builder} builder
- * @param {number} a
- * @param {number} b
- * @param {number} c
- * @param {number} d
- * @returns {flatbuffers.Offset}
- */
-Msg.Down.Quaternion.createQuaternion = function(builder, a, b, c, d) {
-  builder.prep(1, 4);
-  builder.writeInt8(d);
-  builder.writeInt8(c);
-  builder.writeInt8(b);
-  builder.writeInt8(a);
-  return builder.offset();
-};
-
-/**
- * @constructor
- */
-Msg.Down.LAUpdate = function() {
-  /**
-   * @type {flatbuffers.ByteBuffer}
-   */
-  this.bb = null;
-
-  /**
-   * @type {number}
-   */
-  this.bb_pos = 0;
-};
-
-/**
- * @param {number} i
- * @param {flatbuffers.ByteBuffer} bb
- * @returns {Msg.Down.LAUpdate}
- */
-Msg.Down.LAUpdate.prototype.__init = function(i, bb) {
+Msg.Down.addPorts.prototype.__init = function(i, bb) {
   this.bb_pos = i;
   this.bb = bb;
   return this;
@@ -184,59 +50,79 @@ Msg.Down.LAUpdate.prototype.__init = function(i, bb) {
 
 /**
  * @param {flatbuffers.ByteBuffer} bb
- * @param {Msg.Down.LAUpdate=} obj
- * @returns {Msg.Down.LAUpdate}
+ * @param {Msg.Down.addPorts=} obj
+ * @returns {Msg.Down.addPorts}
  */
-Msg.Down.LAUpdate.getRootAsLAUpdate = function(bb, obj) {
-  return (obj || new Msg.Down.LAUpdate).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+Msg.Down.addPorts.getRootAsaddPorts = function(bb, obj) {
+  return (obj || new Msg.Down.addPorts).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
 /**
  * @param {number} index
- * @param {Msg.Down.Vec3=} obj
- * @returns {Msg.Down.Vec3}
+ * @returns {Msg.Down.PortTypes}
  */
-Msg.Down.LAUpdate.prototype.values = function(index, obj) {
+Msg.Down.addPorts.prototype.ports = function(index) {
   var offset = this.bb.__offset(this.bb_pos, 4);
-  return offset ? (obj || new Msg.Down.Vec3).__init(this.bb.__vector(this.bb_pos + offset) + index * 12, this.bb) : null;
+  return offset ? /** @type {Msg.Down.PortTypes} */ (this.bb.readUint16(this.bb.__vector(this.bb_pos + offset) + index * 2)) : /** @type {Msg.Down.PortTypes} */ (0);
 };
 
 /**
  * @returns {number}
  */
-Msg.Down.LAUpdate.prototype.valuesLength = function() {
+Msg.Down.addPorts.prototype.portsLength = function() {
   var offset = this.bb.__offset(this.bb_pos, 4);
   return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
 };
 
 /**
+ * @returns {Uint16Array}
+ */
+Msg.Down.addPorts.prototype.portsArray = function() {
+  var offset = this.bb.__offset(this.bb_pos, 4);
+  return offset ? new Uint16Array(this.bb.bytes().buffer, this.bb.bytes().byteOffset + this.bb.__vector(this.bb_pos + offset), this.bb.__vector_len(this.bb_pos + offset)) : null;
+};
+
+/**
  * @param {flatbuffers.Builder} builder
  */
-Msg.Down.LAUpdate.startLAUpdate = function(builder) {
+Msg.Down.addPorts.startaddPorts = function(builder) {
   builder.startObject(1);
 };
 
 /**
  * @param {flatbuffers.Builder} builder
- * @param {flatbuffers.Offset} valuesOffset
+ * @param {flatbuffers.Offset} portsOffset
  */
-Msg.Down.LAUpdate.addValues = function(builder, valuesOffset) {
-  builder.addFieldOffset(0, valuesOffset, 0);
+Msg.Down.addPorts.addPorts = function(builder, portsOffset) {
+  builder.addFieldOffset(0, portsOffset, 0);
+};
+
+/**
+ * @param {flatbuffers.Builder} builder
+ * @param {Array.<Msg.Down.PortTypes>} data
+ * @returns {flatbuffers.Offset}
+ */
+Msg.Down.addPorts.createPortsVector = function(builder, data) {
+  builder.startVector(2, data.length, 2);
+  for (var i = data.length - 1; i >= 0; i--) {
+    builder.addInt16(data[i]);
+  }
+  return builder.endVector();
 };
 
 /**
  * @param {flatbuffers.Builder} builder
  * @param {number} numElems
  */
-Msg.Down.LAUpdate.startValuesVector = function(builder, numElems) {
-  builder.startVector(12, numElems, 4);
+Msg.Down.addPorts.startPortsVector = function(builder, numElems) {
+  builder.startVector(2, numElems, 2);
 };
 
 /**
  * @param {flatbuffers.Builder} builder
  * @returns {flatbuffers.Offset}
  */
-Msg.Down.LAUpdate.endLAUpdate = function(builder) {
+Msg.Down.addPorts.endaddPorts = function(builder) {
   var offset = builder.endObject();
   return offset;
 };
@@ -244,7 +130,7 @@ Msg.Down.LAUpdate.endLAUpdate = function(builder) {
 /**
  * @constructor
  */
-Msg.Down.HackEVMesh = function() {
+Msg.Down.removePorts = function() {
   /**
    * @type {flatbuffers.ByteBuffer}
    */
@@ -259,9 +145,9 @@ Msg.Down.HackEVMesh = function() {
 /**
  * @param {number} i
  * @param {flatbuffers.ByteBuffer} bb
- * @returns {Msg.Down.HackEVMesh}
+ * @returns {Msg.Down.removePorts}
  */
-Msg.Down.HackEVMesh.prototype.__init = function(i, bb) {
+Msg.Down.removePorts.prototype.__init = function(i, bb) {
   this.bb_pos = i;
   this.bb = bb;
   return this;
@@ -269,67 +155,51 @@ Msg.Down.HackEVMesh.prototype.__init = function(i, bb) {
 
 /**
  * @param {flatbuffers.ByteBuffer} bb
- * @param {Msg.Down.HackEVMesh=} obj
- * @returns {Msg.Down.HackEVMesh}
+ * @param {Msg.Down.removePorts=} obj
+ * @returns {Msg.Down.removePorts}
  */
-Msg.Down.HackEVMesh.getRootAsHackEVMesh = function(bb, obj) {
-  return (obj || new Msg.Down.HackEVMesh).__init(bb.readInt32(bb.position()) + bb.position(), bb);
-};
-
-/**
- * @returns {number}
- */
-Msg.Down.HackEVMesh.prototype.id = function() {
-  var offset = this.bb.__offset(this.bb_pos, 4);
-  return offset ? this.bb.readUint16(this.bb_pos + offset) : 0;
+Msg.Down.removePorts.getRootAsremovePorts = function(bb, obj) {
+  return (obj || new Msg.Down.removePorts).__init(bb.readInt32(bb.position()) + bb.position(), bb);
 };
 
 /**
  * @param {number} index
  * @returns {number}
  */
-Msg.Down.HackEVMesh.prototype.mesh = function(index) {
-  var offset = this.bb.__offset(this.bb_pos, 6);
-  return offset ? this.bb.readFloat32(this.bb.__vector(this.bb_pos + offset) + index * 4) : 0;
+Msg.Down.removePorts.prototype.ports = function(index) {
+  var offset = this.bb.__offset(this.bb_pos, 4);
+  return offset ? this.bb.readUint32(this.bb.__vector(this.bb_pos + offset) + index * 4) : 0;
 };
 
 /**
  * @returns {number}
  */
-Msg.Down.HackEVMesh.prototype.meshLength = function() {
-  var offset = this.bb.__offset(this.bb_pos, 6);
+Msg.Down.removePorts.prototype.portsLength = function() {
+  var offset = this.bb.__offset(this.bb_pos, 4);
   return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
 };
 
 /**
- * @returns {Float32Array}
+ * @returns {Uint32Array}
  */
-Msg.Down.HackEVMesh.prototype.meshArray = function() {
-  var offset = this.bb.__offset(this.bb_pos, 6);
-  return offset ? new Float32Array(this.bb.bytes().buffer, this.bb.bytes().byteOffset + this.bb.__vector(this.bb_pos + offset), this.bb.__vector_len(this.bb_pos + offset)) : null;
+Msg.Down.removePorts.prototype.portsArray = function() {
+  var offset = this.bb.__offset(this.bb_pos, 4);
+  return offset ? new Uint32Array(this.bb.bytes().buffer, this.bb.bytes().byteOffset + this.bb.__vector(this.bb_pos + offset), this.bb.__vector_len(this.bb_pos + offset)) : null;
 };
 
 /**
  * @param {flatbuffers.Builder} builder
  */
-Msg.Down.HackEVMesh.startHackEVMesh = function(builder) {
-  builder.startObject(2);
+Msg.Down.removePorts.startremovePorts = function(builder) {
+  builder.startObject(1);
 };
 
 /**
  * @param {flatbuffers.Builder} builder
- * @param {number} id
+ * @param {flatbuffers.Offset} portsOffset
  */
-Msg.Down.HackEVMesh.addId = function(builder, id) {
-  builder.addFieldInt16(0, id, 0);
-};
-
-/**
- * @param {flatbuffers.Builder} builder
- * @param {flatbuffers.Offset} meshOffset
- */
-Msg.Down.HackEVMesh.addMesh = function(builder, meshOffset) {
-  builder.addFieldOffset(1, meshOffset, 0);
+Msg.Down.removePorts.addPorts = function(builder, portsOffset) {
+  builder.addFieldOffset(0, portsOffset, 0);
 };
 
 /**
@@ -337,10 +207,10 @@ Msg.Down.HackEVMesh.addMesh = function(builder, meshOffset) {
  * @param {Array.<number>} data
  * @returns {flatbuffers.Offset}
  */
-Msg.Down.HackEVMesh.createMeshVector = function(builder, data) {
+Msg.Down.removePorts.createPortsVector = function(builder, data) {
   builder.startVector(4, data.length, 4);
   for (var i = data.length - 1; i >= 0; i--) {
-    builder.addFloat32(data[i]);
+    builder.addInt32(data[i]);
   }
   return builder.endVector();
 };
@@ -349,7 +219,7 @@ Msg.Down.HackEVMesh.createMeshVector = function(builder, data) {
  * @param {flatbuffers.Builder} builder
  * @param {number} numElems
  */
-Msg.Down.HackEVMesh.startMeshVector = function(builder, numElems) {
+Msg.Down.removePorts.startPortsVector = function(builder, numElems) {
   builder.startVector(4, numElems, 4);
 };
 
@@ -357,385 +227,9 @@ Msg.Down.HackEVMesh.startMeshVector = function(builder, numElems) {
  * @param {flatbuffers.Builder} builder
  * @returns {flatbuffers.Offset}
  */
-Msg.Down.HackEVMesh.endHackEVMesh = function(builder) {
+Msg.Down.removePorts.endremovePorts = function(builder) {
   var offset = builder.endObject();
   return offset;
-};
-
-/**
- * @constructor
- */
-Msg.Down.HackEVEntity = function() {
-  /**
-   * @type {flatbuffers.ByteBuffer}
-   */
-  this.bb = null;
-
-  /**
-   * @type {number}
-   */
-  this.bb_pos = 0;
-};
-
-/**
- * @param {number} i
- * @param {flatbuffers.ByteBuffer} bb
- * @returns {Msg.Down.HackEVEntity}
- */
-Msg.Down.HackEVEntity.prototype.__init = function(i, bb) {
-  this.bb_pos = i;
-  this.bb = bb;
-  return this;
-};
-
-/**
- * @param {flatbuffers.ByteBuffer} bb
- * @param {Msg.Down.HackEVEntity=} obj
- * @returns {Msg.Down.HackEVEntity}
- */
-Msg.Down.HackEVEntity.getRootAsHackEVEntity = function(bb, obj) {
-  return (obj || new Msg.Down.HackEVEntity).__init(bb.readInt32(bb.position()) + bb.position(), bb);
-};
-
-/**
- * @param {Msg.Down.Vec3=} obj
- * @returns {Msg.Down.Vec3|null}
- */
-Msg.Down.HackEVEntity.prototype.pos = function(obj) {
-  var offset = this.bb.__offset(this.bb_pos, 4);
-  return offset ? (obj || new Msg.Down.Vec3).__init(this.bb_pos + offset, this.bb) : null;
-};
-
-/**
- * @param {Msg.Down.Quaternion=} obj
- * @returns {Msg.Down.Quaternion|null}
- */
-Msg.Down.HackEVEntity.prototype.ori = function(obj) {
-  var offset = this.bb.__offset(this.bb_pos, 6);
-  return offset ? (obj || new Msg.Down.Quaternion).__init(this.bb_pos + offset, this.bb) : null;
-};
-
-/**
- * @returns {number}
- */
-Msg.Down.HackEVEntity.prototype.mesh = function() {
-  var offset = this.bb.__offset(this.bb_pos, 8);
-  return offset ? this.bb.readUint16(this.bb_pos + offset) : 0;
-};
-
-/**
- * @param {flatbuffers.Builder} builder
- */
-Msg.Down.HackEVEntity.startHackEVEntity = function(builder) {
-  builder.startObject(3);
-};
-
-/**
- * @param {flatbuffers.Builder} builder
- * @param {flatbuffers.Offset} posOffset
- */
-Msg.Down.HackEVEntity.addPos = function(builder, posOffset) {
-  builder.addFieldStruct(0, posOffset, 0);
-};
-
-/**
- * @param {flatbuffers.Builder} builder
- * @param {flatbuffers.Offset} oriOffset
- */
-Msg.Down.HackEVEntity.addOri = function(builder, oriOffset) {
-  builder.addFieldStruct(1, oriOffset, 0);
-};
-
-/**
- * @param {flatbuffers.Builder} builder
- * @param {number} mesh
- */
-Msg.Down.HackEVEntity.addMesh = function(builder, mesh) {
-  builder.addFieldInt16(2, mesh, 0);
-};
-
-/**
- * @param {flatbuffers.Builder} builder
- * @returns {flatbuffers.Offset}
- */
-Msg.Down.HackEVEntity.endHackEVEntity = function(builder) {
-  var offset = builder.endObject();
-  return offset;
-};
-
-/**
- * @constructor
- */
-Msg.Down.HackEVUpdate = function() {
-  /**
-   * @type {flatbuffers.ByteBuffer}
-   */
-  this.bb = null;
-
-  /**
-   * @type {number}
-   */
-  this.bb_pos = 0;
-};
-
-/**
- * @param {number} i
- * @param {flatbuffers.ByteBuffer} bb
- * @returns {Msg.Down.HackEVUpdate}
- */
-Msg.Down.HackEVUpdate.prototype.__init = function(i, bb) {
-  this.bb_pos = i;
-  this.bb = bb;
-  return this;
-};
-
-/**
- * @param {flatbuffers.ByteBuffer} bb
- * @param {Msg.Down.HackEVUpdate=} obj
- * @returns {Msg.Down.HackEVUpdate}
- */
-Msg.Down.HackEVUpdate.getRootAsHackEVUpdate = function(bb, obj) {
-  return (obj || new Msg.Down.HackEVUpdate).__init(bb.readInt32(bb.position()) + bb.position(), bb);
-};
-
-/**
- * @param {number} index
- * @param {Msg.Down.HackEVEntity=} obj
- * @returns {Msg.Down.HackEVEntity}
- */
-Msg.Down.HackEVUpdate.prototype.entities = function(index, obj) {
-  var offset = this.bb.__offset(this.bb_pos, 4);
-  return offset ? (obj || new Msg.Down.HackEVEntity).__init(this.bb.__indirect(this.bb.__vector(this.bb_pos + offset) + index * 4), this.bb) : null;
-};
-
-/**
- * @returns {number}
- */
-Msg.Down.HackEVUpdate.prototype.entitiesLength = function() {
-  var offset = this.bb.__offset(this.bb_pos, 4);
-  return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
-};
-
-/**
- * @param {flatbuffers.Builder} builder
- */
-Msg.Down.HackEVUpdate.startHackEVUpdate = function(builder) {
-  builder.startObject(1);
-};
-
-/**
- * @param {flatbuffers.Builder} builder
- * @param {flatbuffers.Offset} entitiesOffset
- */
-Msg.Down.HackEVUpdate.addEntities = function(builder, entitiesOffset) {
-  builder.addFieldOffset(0, entitiesOffset, 0);
-};
-
-/**
- * @param {flatbuffers.Builder} builder
- * @param {Array.<flatbuffers.Offset>} data
- * @returns {flatbuffers.Offset}
- */
-Msg.Down.HackEVUpdate.createEntitiesVector = function(builder, data) {
-  builder.startVector(4, data.length, 4);
-  for (var i = data.length - 1; i >= 0; i--) {
-    builder.addOffset(data[i]);
-  }
-  return builder.endVector();
-};
-
-/**
- * @param {flatbuffers.Builder} builder
- * @param {number} numElems
- */
-Msg.Down.HackEVUpdate.startEntitiesVector = function(builder, numElems) {
-  builder.startVector(4, numElems, 4);
-};
-
-/**
- * @param {flatbuffers.Builder} builder
- * @returns {flatbuffers.Offset}
- */
-Msg.Down.HackEVUpdate.endHackEVUpdate = function(builder) {
-  var offset = builder.endObject();
-  return offset;
-};
-
-/**
- * @constructor
- */
-Msg.Down.RadarArcUpdate = function() {
-  /**
-   * @type {flatbuffers.ByteBuffer}
-   */
-  this.bb = null;
-
-  /**
-   * @type {number}
-   */
-  this.bb_pos = 0;
-};
-
-/**
- * @param {number} i
- * @param {flatbuffers.ByteBuffer} bb
- * @returns {Msg.Down.RadarArcUpdate}
- */
-Msg.Down.RadarArcUpdate.prototype.__init = function(i, bb) {
-  this.bb_pos = i;
-  this.bb = bb;
-  return this;
-};
-
-/**
- * @param {flatbuffers.ByteBuffer} bb
- * @param {Msg.Down.RadarArcUpdate=} obj
- * @returns {Msg.Down.RadarArcUpdate}
- */
-Msg.Down.RadarArcUpdate.getRootAsRadarArcUpdate = function(bb, obj) {
-  return (obj || new Msg.Down.RadarArcUpdate).__init(bb.readInt32(bb.position()) + bb.position(), bb);
-};
-
-/**
- * @param {number} index
- * @param {Msg.Down.Vec3=} obj
- * @returns {Msg.Down.Vec3}
- */
-Msg.Down.RadarArcUpdate.prototype.pings = function(index, obj) {
-  var offset = this.bb.__offset(this.bb_pos, 4);
-  return offset ? (obj || new Msg.Down.Vec3).__init(this.bb.__vector(this.bb_pos + offset) + index * 12, this.bb) : null;
-};
-
-/**
- * @returns {number}
- */
-Msg.Down.RadarArcUpdate.prototype.pingsLength = function() {
-  var offset = this.bb.__offset(this.bb_pos, 4);
-  return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
-};
-
-/**
- * @param {flatbuffers.Builder} builder
- */
-Msg.Down.RadarArcUpdate.startRadarArcUpdate = function(builder) {
-  builder.startObject(1);
-};
-
-/**
- * @param {flatbuffers.Builder} builder
- * @param {flatbuffers.Offset} pingsOffset
- */
-Msg.Down.RadarArcUpdate.addPings = function(builder, pingsOffset) {
-  builder.addFieldOffset(0, pingsOffset, 0);
-};
-
-/**
- * @param {flatbuffers.Builder} builder
- * @param {number} numElems
- */
-Msg.Down.RadarArcUpdate.startPingsVector = function(builder, numElems) {
-  builder.startVector(12, numElems, 4);
-};
-
-/**
- * @param {flatbuffers.Builder} builder
- * @returns {flatbuffers.Offset}
- */
-Msg.Down.RadarArcUpdate.endRadarArcUpdate = function(builder) {
-  var offset = builder.endObject();
-  return offset;
-};
-
-/**
- * @constructor
- */
-Msg.Down.DownMsg = function() {
-  /**
-   * @type {flatbuffers.ByteBuffer}
-   */
-  this.bb = null;
-
-  /**
-   * @type {number}
-   */
-  this.bb_pos = 0;
-};
-
-/**
- * @param {number} i
- * @param {flatbuffers.ByteBuffer} bb
- * @returns {Msg.Down.DownMsg}
- */
-Msg.Down.DownMsg.prototype.__init = function(i, bb) {
-  this.bb_pos = i;
-  this.bb = bb;
-  return this;
-};
-
-/**
- * @param {flatbuffers.ByteBuffer} bb
- * @param {Msg.Down.DownMsg=} obj
- * @returns {Msg.Down.DownMsg}
- */
-Msg.Down.DownMsg.getRootAsDownMsg = function(bb, obj) {
-  return (obj || new Msg.Down.DownMsg).__init(bb.readInt32(bb.position()) + bb.position(), bb);
-};
-
-/**
- * @returns {Msg.Down.MsgContent}
- */
-Msg.Down.DownMsg.prototype.contentType = function() {
-  var offset = this.bb.__offset(this.bb_pos, 4);
-  return offset ? /** @type {Msg.Down.MsgContent} */ (this.bb.readUint8(this.bb_pos + offset)) : Msg.Down.MsgContent.NONE;
-};
-
-/**
- * @param {flatbuffers.Table} obj
- * @returns {?flatbuffers.Table}
- */
-Msg.Down.DownMsg.prototype.content = function(obj) {
-  var offset = this.bb.__offset(this.bb_pos, 6);
-  return offset ? this.bb.__union(obj, this.bb_pos + offset) : null;
-};
-
-/**
- * @param {flatbuffers.Builder} builder
- */
-Msg.Down.DownMsg.startDownMsg = function(builder) {
-  builder.startObject(2);
-};
-
-/**
- * @param {flatbuffers.Builder} builder
- * @param {Msg.Down.MsgContent} contentType
- */
-Msg.Down.DownMsg.addContentType = function(builder, contentType) {
-  builder.addFieldInt8(0, contentType, Msg.Down.MsgContent.NONE);
-};
-
-/**
- * @param {flatbuffers.Builder} builder
- * @param {flatbuffers.Offset} contentOffset
- */
-Msg.Down.DownMsg.addContent = function(builder, contentOffset) {
-  builder.addFieldOffset(1, contentOffset, 0);
-};
-
-/**
- * @param {flatbuffers.Builder} builder
- * @returns {flatbuffers.Offset}
- */
-Msg.Down.DownMsg.endDownMsg = function(builder) {
-  var offset = builder.endObject();
-  return offset;
-};
-
-/**
- * @param {flatbuffers.Builder} builder
- * @param {flatbuffers.Offset} offset
- */
-Msg.Down.DownMsg.finishDownMsgBuffer = function(builder, offset) {
-  builder.finish(offset);
 };
 
 // Exports for Node.js and RequireJS

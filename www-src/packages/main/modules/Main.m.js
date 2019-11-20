@@ -8,12 +8,13 @@ function startNetworking() {
 	ws.addEventListener("open",e=>console.log("Open ",e));
 	ws.addEventListener("error",e=>console.log("Error ",e));
 	ws.addEventListener("message",e=>{
-		e.data.arrayBuffer().then(d=>new Uint8Array(d)).then(bytes=>{
-			let msg = Msg.Down.DownMsg.getRootAsDownMsg(new flatbuffers.ByteBuffer(bytes));
-			if (msg.contentType()==Msg.Down.MsgContent.HackEVUpdate)
-				hackEVPort.receiveMessage(msg.content(new Msg.Down.HackEVUpdate()));
-			if (msg.contentType()==Msg.Down.MsgContent.RadarArcUpdate)
-				radarArcPort.receiveMessage(msg.content(new Msg.Down.RadarArcUpdate()));
+		e.data.arrayBuffer().then(d=>[new Uint32Array(d)[0] ,new Uint8Array(d).slice(4)]).then(([componentID, bytes])=>{
+			radarArcPort.receiveMessage(bytes);
+			////let msg = Msg.Down.DownMsg.getRootAsDownMsg(new flatbuffers.ByteBuffer(bytes));
+			////if (msg.contentType()==Msg.Down.MsgContent.HackEVUpdate)
+			////	hackEVPort.receiveMessage(msg.content(new Msg.Down.HackEVUpdate()));
+			////if (msg.contentType()==Msg.Down.MsgContent.RadarArcUpdate)
+			////	radarArcPort.receiveMessage(msg.content(new Msg.Down.RadarArcUpdate()));
 		});
 	});
 	ws.addEventListener("close",e=>console.log("Close ",e));

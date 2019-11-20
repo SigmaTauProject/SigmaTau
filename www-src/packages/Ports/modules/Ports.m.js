@@ -118,17 +118,21 @@ class RadarArc extends Port {
 		super(send, id,"radarArc");
 		this.pings = [];
 	}
-	receiveMessage(updateMsg) {
-		let pings = [];
-		for (let i=0; i<updateMsg.pingsLength(); i++) {
-			let ping = updateMsg.pings(i);
-			pings.push(	[ ping.x()
-				, ping.y()
-				, ping.z()
-				]
-			);
+	receiveMessage(bytes) {
+		let msg = Msg.RadarArc.DownMsg.getRootAsDownMsg(new flatbuffers.ByteBuffer(bytes));
+		if (msg.contentType() == Msg.RadarArc.DownMsgContent.Update) {
+			let updateMsg = msg.content(new Msg.RadarArc.Update());
+			let pings = [];
+			for (let i=0; i<updateMsg.pingsLength(); i++) {
+				let ping = updateMsg.pings(i);
+				pings.push(	[ ping.x()
+					, ping.y()
+					, ping.z()
+					]
+				);
+			}
+			this.pings = pings;
 		}
-		this.pings = pings;
 	}
 }
 
