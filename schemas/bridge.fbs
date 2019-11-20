@@ -1,13 +1,13 @@
 namespace Msg.Bridge;
 
-enum PortTypes : uint16	{ Wire
+enum PortType : uint16	{ Wire
 	, LA
 	, HackEV
 	, RadarArc
 	}
 
 table AddPorts {
-	ports	:	[PortTypes]	;
+	ports	:	[PortType]	;
 }
 table RemovePorts {
 	ports	:	[uint32]	;
