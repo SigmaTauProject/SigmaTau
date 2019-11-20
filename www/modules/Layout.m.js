@@ -9,23 +9,28 @@ import {PerspectiveCamera} from "./Camera.m.js";
 
 
 export default
-function makeLayout(ports) {
-	return div("body",
-		ports	.filter(p=>p.type=="hackEV")
-			.map(p=>hackEV3DView(p)),
-		ports	.filter(p=>p.type=="radarArc")
-			.map(p=>radarView(p)),
-		ports	.filter(p=>p.type=="la")
-			.map(p=>locationArray(p)),
-		ports	.filter(p=>p.type=="wire")
-			.map(p=>slider().escRef(s=>s.value.changes().forEach(v=>p.set(v)))),
-	);
+function makeLayout(bridge) {
+	let el = div("body");
+	bridge.ports.forEach((ports)=>{
+		while (el.firstChild) el.removeChild(el.firstChild);
+		[
+			...ports	.filter(p=>p.type=="hackEV")
+				.map(p=>hackEV3DView(p)),
+			...ports	.filter(p=>p.type=="radarArc")
+				.map(p=>radarView(p)),
+			...ports	.filter(p=>p.type=="la")
+				.map(p=>locationArray(p)),
+			...ports	.filter(p=>p.type=="wire")
+				.map(p=>slider()/***.escRef(s=>s.value.changes().forEach(v=>p.set(v)))*/),
+		].forEach(c=>el.appendChild(c));
+	});
+	return el;
 }
 
 
 
 function slider() {
-	let slider = new GUIItem(
+	let slider =
 		div("input",
 			{ type:"range"
 			, min:"-1"
@@ -33,25 +38,23 @@ function slider() {
 			, step:"0.01"
 			, value:"0"
 			}
-		)
-	);
-	let c = cell(slider.el.value);
-	slider.el.addEventListener("input",e=>c.change(e.srcElement.value));
-	slider.value = c.map(v=>Number(v));
+		);
+	////let c = cell(slider.value);
+	////slider.el.addEventListener("input",e=>c.change(e.srcElement.value));
+	////slider.value = c.map(v=>Number(v));
 	return slider;
 }
 
 function locationArray(laPort) {
 	let svgContent;
-	let svgGui = new GUIItem(
+	let svgGui =
 		svg("svg", 
 			{	viewBox:"-1 -1 2 2",
 				style:"width:100%;height:100%;position:absolute;top:0;left:0;z-index:-1;",
 			},
 			svg("g", (el=>svgContent=el), {transform:"scale(1,-1) scale(0.01)"},
 			),
-		),
-	);
+		);
 	let shipEls = [];
 	setInterval(()=>{
 			laPort.locations.forEach((l,i)=>{

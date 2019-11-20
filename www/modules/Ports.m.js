@@ -140,21 +140,24 @@ export
 class Bridge  extends Port {
 	constructor(send) {
 		super(send,0,"bridge");
-		this.ports = [this];
+		this.ports = cell([this]);
+		this.cachedPorts = this.ports.cache();
 	}
 	handleMessage(dataBuffer) {
 		let portID = new Uint32Array(dataBuffer)[0];
 		let bytes = new Uint8Array(dataBuffer).slice(4);
-		if (portID < this.ports.length) 
-			this.ports[portID].receiveMessage(bytes);
+		let ports = this.cachedPorts.grab()
+		if (portID < ports.length) 
+			ports[portID].receiveMessage(bytes);
 	}
 	receiveMessage(bytes) {
 		let msg = Msg.Bridge.DownMsg.getRootAsDownMsg(new flatbuffers.ByteBuffer(bytes));
 		if (msg.contentType() == Msg.Bridge.DownMsgContent.AddPorts) {
 			let innerMsg = msg.content(new Msg.Bridge.AddPorts());
+			let ports = this.cachedPorts.grab();
 			for (let i=0; i<innerMsg.portsLength(); i++) {
 				let port = innerMsg.ports(i);
-				this.ports.push(	(()=>{
+				ports.push(	(()=>{
 						if (port==Msg.Bridge.PortType.Wire)
 							return new Wire(this.send, this.ports.length);
 						if (port==Msg.Bridge.PortType.LA)
@@ -166,14 +169,16 @@ class Bridge  extends Port {
 					})()
 				);
 			}
+			this.ports.change(ports);
 		}
 		else if (msg.contentType() == Msg.Bridge.DownMsgContent.RemovePorts) {
 			let innerMsg = msg.content(new Msg.Bridge.RemovePorts());
-			let removePorts = [];
+			let ports = this.cachedPorts.grab();
 			for (let i=0; i<innerMsg.portsLength(); i++) {
 				let port = innerMsg.ports(i);
-				this.ports.splice(port,1);
+				ports.splice(port,1);
 			}
+			this.ports.change(ports);
 		}
 	}
 }

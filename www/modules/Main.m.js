@@ -52,6 +52,13 @@ startNetworking();
 
 let bridge = new Bridge(send);
 
+let iframe = div("iframe");
+document.body.appendChild(iframe);
+setTimeout(()=>iframe.contentDocument.body.parentElement.replaceChild(
+	makeLayout(bridge),
+	iframe.contentDocument.body
+));
+
 ////let hackEVPort;
 ////let radarArcPort;
 ////let iframe = div("iframe");
