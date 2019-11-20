@@ -18,8 +18,8 @@ Msg.Bridge = Msg.Bridge || {};
 Msg.Bridge.PortType = {
   Wire: 0,
   LA: 1,
-  HackEV: 2,
-  RadarArc: 3
+  RadarArc: 2,
+  HackEV: 3
 };
 
 /**
