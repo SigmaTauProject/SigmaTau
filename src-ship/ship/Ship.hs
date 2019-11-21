@@ -30,6 +30,7 @@ import Data.Msg.Common as Common
 import Data.Msg.Bridge as Bridge
 import Data.Msg.Wire as Wire
 import Data.Msg.RadarArc as RadarArc
+import Data.Msg.HackEV as HackEV
 
 type NetworkConnection = (TChan (Lifetime Connection))
 
@@ -68,15 +69,17 @@ newShip world networkConnection = do
 			)
 		
 		rawEntities <- mapEntities world (\e->(,) <$> getEntityPos world entity e <*> getEntityOri world entity e)
-		----let entitiesMsg	= downMsg
-		----	$ msgContentHackEVUpdate $ hackEVUpdate
-		----	$ Just $ FB.fromList'
-		----	$ fmap (\(pos,ori)->hackEVEntity
-		----			(Just $ toNetVec $ unP pos)
-		----			(Just $ toNetQuat $ ori)
-		----			(Just $ 0)
-		----		)
-		----	$ rawEntities
+		let entitiesMsg	= append (runPutLazy $ putWord32le 4)
+			$ encode
+			$ HackEV.downMsg
+			$ HackEV.downMsgContentUpdate $ HackEV.update
+			$ Just $ FB.fromList'
+			$ fmap (\(pos,ori)->HackEV.entity
+					(Just $ toNetVec $ unP pos)
+					(Just $ toNetQuat $ ori)
+					(Just $ 0)
+				)
+			$ rawEntities
 		let radarMsg	= append (runPutLazy $ putWord32le 3)
 			$ encode
 			$ RadarArc.downMsg
@@ -117,6 +120,7 @@ newShip world networkConnection = do
 											sequence_ $ modifyIORef' <$> (thrusterPower <$> thrusters !? 1) <*> pure (\tv->tv + value)
 							_ -> return $ return ()
 					)
+				atomically $ writeTChan downMsgChan $ DownMsg entitiesMsg
 				atomically $ writeTChan downMsgChan $ DownMsg radarMsg
 			)
 		

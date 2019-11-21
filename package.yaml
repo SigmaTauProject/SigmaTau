@@ -48,6 +48,7 @@ internal-libraries:
       - Data.Msg.Bridge
       - Data.Msg.Wire
       - Data.Msg.RadarArc
+      - Data.Msg.HackEV
     dependencies:
       - flatbuffers
   terminal-web-server:

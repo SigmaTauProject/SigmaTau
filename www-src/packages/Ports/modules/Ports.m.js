@@ -95,23 +95,27 @@ class HackEV extends Port { // Hack Entity View
 		super(send, id,"hackEV");
 		this.entities = cell([]);
 	}
-	receiveMessage(updateMsg) {
-		let entities = [];
-		for (let i=0; i<updateMsg.entitiesLength(); i++) {
-			let entity = updateMsg.entities(i);
-			entities.push(	{ pos	:	[ entity.pos().x()
-						, entity.pos().y()
-						, entity.pos().z()
-						]
-				, ori	:	[ entity.ori().a()
-						, entity.ori().b()
-						, entity.ori().c()
-						, entity.ori().d()
-						].map(v=>unnetworkFloat(v,8,true))
-				, meshID	:entity.mesh()
-				});
+	receiveMessage(bytes) {
+		let msg = Msg.HackEV.DownMsg.getRootAsDownMsg(new flatbuffers.ByteBuffer(bytes));
+		if (msg.contentType() == Msg.HackEV.DownMsgContent.Update) {
+			let updateMsg = msg.content(new Msg.HackEV.Update());
+			let entities = [];
+			for (let i=0; i<updateMsg.entitiesLength(); i++) {
+				let entity = updateMsg.entities(i);
+				entities.push(	{ pos	:	[ entity.pos().x()
+							, entity.pos().y()
+							, entity.pos().z()
+							]
+					, ori	:	[ entity.ori().a()
+							, entity.ori().b()
+							, entity.ori().c()
+							, entity.ori().d()
+							].map(v=>unnetworkFloat(v,8,true))
+					, meshID	:entity.mesh()
+					});
+			}
+			this.entities.change(entities);
 		}
-		this.entities.change(entities);
 	}
 }
 

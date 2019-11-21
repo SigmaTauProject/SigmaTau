@@ -94,7 +94,7 @@ function hackEV3DView(hackEVPort) {
 	var renderer = new THREE.WebGLRenderer({antialias:true});
 	var canvas = renderer.domElement;
 	var loader = new THREE.OBJLoader();
-	canvas.style = "width:1200px;height:1200px";
+	canvas.style = "width:1200px;height:800px";
 	renderer.setClearColor("#000000");
 	
 	var outerScene = new THREE.Scene();
