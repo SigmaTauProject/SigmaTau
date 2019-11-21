@@ -159,13 +159,13 @@ class Bridge  extends Port {
 				let port = innerMsg.ports(i);
 				ports.push(	(()=>{
 						if (port==Msg.Bridge.PortType.Wire)
-							return new Wire(this.send, this.ports.length);
+							return new Wire(this.sendMessage, ports.length);
 						if (port==Msg.Bridge.PortType.LA)
-							return new LA(this.send, this.ports.length);
+							return new LA(this.sendMessage, ports.length);
 						if (port==Msg.Bridge.PortType.RadarArc)
-							return new RadarArc(this.send, this.ports.length);
+							return new RadarArc(this.sendMessage, ports.length);
 						if (port==Msg.Bridge.PortType.HackEV)
-							return new HackEV(this.send, this.ports.length);
+							return new HackEV(this.sendMessage, ports.length);
 					})()
 				);
 			}
