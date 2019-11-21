@@ -9,47 +9,50 @@ import {PerspectiveCamera} from "./Camera.m.js";
 
 
 export default
-function makeLayout(ports) {
-	return div("body",
-		ports	.filter(p=>p.type=="hackEV")
-			.map(p=>hackEV3DView(p)),
-		ports	.filter(p=>p.type=="radarArc")
-			.map(p=>radarView(p)),
-		ports	.filter(p=>p.type=="la")
-			.map(p=>locationArray(p)),
-		ports	.filter(p=>p.type=="wire")
-			.map(p=>slider().escRef(s=>s.value.changes().forEach(v=>p.set(v)))),
-	);
+function makeLayout(bridge) {
+	let el = div("body");
+	bridge.ports.forEach((ports)=>{
+		while (el.firstChild) el.removeChild(el.firstChild);
+		[
+			...ports	.filter(p=>p.type=="hackEV")
+				.map(p=>hackEV3DView(p)),
+			...ports	.filter(p=>p.type=="radarArc")
+				.map(p=>radarView(p)),
+			...ports	.filter(p=>p.type=="la")
+				.map(p=>locationArray(p)),
+			...ports	.filter(p=>p.type=="wire")
+				.map(p=>slider(p)),
+			...ports	.filter(p=>p.type=="wire")
+				.map(p=>slider(p,{min:"0"})),
+		].forEach(c=>el.appendChild(c));
+	});
+	return el;
 }
 
 
 
-function slider() {
-	let slider = new GUIItem(
-		div("input",
-			{ type:"range"
-			, min:"-1"
-			, max:"1"
-			, step:"0.01"
-			, value:"0"
-			}
-		)
+function slider(wirePort, config={}) {
+	let slider = div(	"input",
+		{ type	: "range"
+		, min	: config.min	|| "-1"
+		, max	: config.max	|| "1"
+		, step	: config.step	|| "0.01"
+		, value	: config.value	|| "0"
+		}
 	);
-	let c = cell(slider.el.value);
-	slider.el.addEventListener("input",e=>c.change(e.srcElement.value));
-	slider.value = c.map(v=>Number(v));
+	
+	slider.addEventListener("input",e=>wirePort.set(+e.srcElement.value));
+	wirePort.value.forEach(v=>slider.value=v);
 	return slider;
 }
 
 function locationArray(laPort) {
 	let svgContent;
-	let svgGui = new GUIItem(
-		svg("svg", 
-			{	viewBox:"-1 -1 2 2",
-				style:"width:100%;height:100%;position:absolute;top:0;left:0;z-index:-1;",
-			},
-			svg("g", (el=>svgContent=el), {transform:"scale(1,-1) scale(0.01)"},
-			),
+	let svgEl = svg("svg", 
+		{	viewBox:"-1 -1 2 2",
+			style:"width:100%;height:100%;position:absolute;top:0;left:0;z-index:-1;",
+		},
+		svg("g", (el=>svgContent=el), {transform:"scale(1,-1) scale(0.01)"},
 		),
 	);
 	let shipEls = [];
@@ -65,26 +68,25 @@ function locationArray(laPort) {
 		},
 		10,
 	);
-	return svgGui;
+	return svgEl;
 }
 
 function radarView(radarArcPort) {
 	let canvas = div("canvas", {style:"width:1200px;height:800px;"});
 	let ctx = canvas.getContext("2d");
 	
-	function render(time) {
+	radarArcPort.pings.forEach(render);
+	function render(pings) {
 		canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight;
 		ctx.fillStyle = "#000";
 		ctx.fillRect(0, 0, canvas.width, canvas.height);
-		for (let ping of radarArcPort.pings) {
+		for (let ping of pings) {
 			ctx.beginPath();
 			ctx.arc(canvas.width/2+ping[1], canvas.height/2-ping[0], 2, 0, 2 * Math.PI, false);
 			ctx.fillStyle = '#8f0';
 			ctx.fill();
 		}
-		requestAnimationFrame(render);
 	}
-	requestAnimationFrame(render);
 	return canvas;
 }
 
@@ -92,7 +94,7 @@ function hackEV3DView(hackEVPort) {
 	var renderer = new THREE.WebGLRenderer({antialias:true});
 	var canvas = renderer.domElement;
 	var loader = new THREE.OBJLoader();
-	canvas.style = "width:1200px;height:1200px";
+	canvas.style = "width:1200px;height:800px";
 	renderer.setClearColor("#000000");
 	
 	var outerScene = new THREE.Scene();
@@ -130,19 +132,24 @@ function hackEV3DView(hackEVPort) {
 	scene.add( pointLight );
 	
 	var shipTemplate;
+	var loaded = false;
 	var ships = [];
 	
 	loader.load("models/ship.obj", (object)=>{
 		shipTemplate = object;
-		requestAnimationFrame(render);
+		loaded = true;
 	});
 	
-	function render() {
+	hackEVPort.entities.forEach(render);
+	
+	function render(entities) {
+		if (!loaded) return;
+		
 		renderer.setSize(canvas.clientWidth, canvas.clientHeight);
 		camera.aspect = canvas.clientWidth / canvas.clientHeight;
 		camera.updateProjectionMatrix();
 		
-		hackEVPort.entities.forEach((entity, index)=>{
+		entities.forEach((entity, index)=>{
 			while (ships.length <= index) {
 				let s = shipTemplate.clone();
 				scene.add(s);
@@ -155,8 +162,6 @@ function hackEV3DView(hackEVPort) {
 		});
 		
 		renderer.render(outerScene, camera);
-		
-		requestAnimationFrame(render);
 	}
 	
 	return canvas;

@@ -1,0 +1,25 @@
+include "./common.fbs";
+
+namespace Msg.Wire;
+
+table Set {
+	value	:	int16	;
+}
+table Adjust {
+	value	:	int16	;
+}
+
+union UpMsgContent
+{ Set
+, Adjust
+}
+union DownMsgContent
+{ Set
+}
+
+table UpMsg {
+	content	:	UpMsgContent	;
+}
+table DownpMsg {
+	content	:	DownMsgContent	;
+}

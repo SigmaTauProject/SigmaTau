@@ -1,13 +1,13 @@
 import {Cell,makeCell} from "./Cell.m.js";
 import * as HC from "./HybridCell.m.js";
 
-Cell.prototype.switch = function() {
+Cell.prototype.impureSwitch = function() {
 	if (this.initial instanceof Cell)
-		return this.switchC();
+		return this.impureSwitchC();
 	else //if (this.initial instanceof Stream)
-		return this.switchS();
+		return this.impureSwitchS();
 }
-Cell.prototype.switchC = function() {
+Cell.prototype.impureSwitchC = function() {
 	let n = makeCell(this.initial.initial,null,this.nodeIdentifier);
 	
 	let lastRoot = this.initial._root;
@@ -15,7 +15,7 @@ Cell.prototype.switchC = function() {
 	this.initial._root.addNode(callback);
 	
 	this.changes().forEach((value)=>{
-		console.assert(value instanceof HC.Cell, "Must use `.caching()` on cells within a switch.");
+		console.assert(value instanceof HC.Cell, "Must use `.caching()` on cells within a impureSwitch.");
 		lastRoot.unsafeRemoveNode(callback);
 		currentNID = value.nodeIdentifier;
 		lastRoot = value._root;
@@ -29,7 +29,7 @@ Cell.prototype.switchC = function() {
 		return scope;
 	}
 }
-Cell.prototype.switchS = function() {
+Cell.prototype.impureSwitchS = function() {
 	console.assert(false,"Unimplemented");
 }
 

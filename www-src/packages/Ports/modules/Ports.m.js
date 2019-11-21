@@ -16,52 +16,55 @@ export
 class Wire extends Port {
 	constructor(send, id) {
 		super(send, id,"wire");
-		this.value = 0;
+		this.value = cell(0).caching();
 	}
-	set(value) {
-		console.log(this.id,value);
-		this.value = 0;
+	set(newValue) {
+		console.log(this.id,newValue);
+		this.value.change(newValue);
 		
-			let rawValue = value;// Hack so inner scope can redefine value but also use it.
 		{
-			let value = networkFloat(rawValue,16,true);
+			let value = networkFloat(newValue,16,true);
 			let builder = new flatbuffers.Builder(1024);
 			
-			Msg.Up.WireSet.startWireSet(builder);
-			Msg.Up.WireSet.addId(builder, this.id);
-			Msg.Up.WireSet.addValue(builder, value);
-			let msgContent = Msg.Up.WireSet.endWireSet(builder);
+			Msg.Wire.Set.startSet(builder);
+			Msg.Wire.Set.addValue(builder, value);
+			let msgContent = Msg.Wire.Set.endSet(builder);
 			
-			Msg.Up.UpMsg.startUpMsg(builder);
-			Msg.Up.UpMsg.addContentType(builder, Msg.Up.MsgContent.WireSet);
-			Msg.Up.UpMsg.addContent(builder, msgContent);
-			let msg = Msg.Up.UpMsg.endUpMsg(builder);
+			Msg.Wire.UpMsg.startUpMsg(builder);
+			Msg.Wire.UpMsg.addContentType(builder, Msg.Wire.UpMsgContent.Set);
+			Msg.Wire.UpMsg.addContent(builder, msgContent);
+			let msg = Msg.Wire.UpMsg.endUpMsg(builder);
 			
 			builder.finish(msg);
-			let bytes = builder.asUint8Array();
+			let mainBytes = builder.asUint8Array();
+			let bytes = new Uint8Array(4+mainBytes.length);
+			bytes.set(mainBytes, 4);
+			new Uint32Array(bytes.buffer)[0] = this.id;
 			this.sendMessage(bytes);
 		}
 	}
 	adjust(amount) {
 		console.log(this.id,amount);
-		this.value += amount;
+		this.value.change(this.value.grab()+amount);
 		
 		{
 			let value = networkFloat(amount,16,true);
 			let builder = new flatbuffers.Builder(1024);
 			
-			Msg.Up.WireAdjust.startWireAdjust(builder);
-			Msg.Up.WireAdjust.addId(builder, this.id);
-			Msg.Up.WireAdjust.addValue(builder, value);
-			let msgContent = Msg.Up.WireAdjust.endWireAdjust(builder);
+			Msg.Wire.Adjust.startAdjust(builder);
+			Msg.Wire.Adjust.addValue(builder, value);
+			let msgContent = Msg.Wire.Adjust.endAdjust(builder);
 			
-			Msg.Up.UpMsg.startUpMsg(builder);
-			Msg.Up.UpMsg.addContentType(builder, Msg.Up.MsgContent.WireAdjust);
-			Msg.Up.UpMsg.addContent(builder, msgContent);
-			let msg = Msg.Up.UpMsg.endUpMsg(builder);
+			Msg.Wire.UpMsg.startUpMsg(builder);
+			Msg.Wire.UpMsg.addContentType(builder, Msg.Wire.UpMsgContent.Adjust);
+			Msg.Wire.UpMsg.addContent(builder, msgContent);
+			let msg = Msg.Wire.UpMsg.endUpMsg(builder);
 			
 			builder.finish(msg);
-			let bytes = builder.asUint8Array();
+			let mainBytes = builder.asUint8Array();
+			let bytes = new Uint8Array(4+mainBytes.length);
+			bytes.set(mainBytes, 4);
+			new Uint32Array(bytes.buffer)[0] = this.id;
 			this.sendMessage(bytes);
 		}
 	}
@@ -90,25 +93,29 @@ export
 class HackEV extends Port { // Hack Entity View
 	constructor(send, id) {
 		super(send, id,"hackEV");
-		this.entities = [];
+		this.entities = cell([]);
 	}
-	receiveMessage(updateMsg) {
-		let entities = [];
-		for (let i=0; i<updateMsg.entitiesLength(); i++) {
-			let entity = updateMsg.entities(i);
-			entities.push(	{ pos	:	[ entity.pos().x()
-						, entity.pos().y()
-						, entity.pos().z()
-						]
-				, ori	:	[ entity.ori().a()
-						, entity.ori().b()
-						, entity.ori().c()
-						, entity.ori().d()
-						].map(v=>unnetworkFloat(v,8,true))
-				, meshID	:entity.mesh()
-				});
+	receiveMessage(bytes) {
+		let msg = Msg.HackEV.DownMsg.getRootAsDownMsg(new flatbuffers.ByteBuffer(bytes));
+		if (msg.contentType() == Msg.HackEV.DownMsgContent.Update) {
+			let updateMsg = msg.content(new Msg.HackEV.Update());
+			let entities = [];
+			for (let i=0; i<updateMsg.entitiesLength(); i++) {
+				let entity = updateMsg.entities(i);
+				entities.push(	{ pos	:	[ entity.pos().x()
+							, entity.pos().y()
+							, entity.pos().z()
+							]
+					, ori	:	[ entity.ori().a()
+							, entity.ori().b()
+							, entity.ori().c()
+							, entity.ori().d()
+							].map(v=>unnetworkFloat(v,8,true))
+					, meshID	:entity.mesh()
+					});
+			}
+			this.entities.change(entities);
 		}
-		this.entities = entities;
 	}
 }
 
@@ -116,22 +123,72 @@ export
 class RadarArc extends Port {
 	constructor(send, id) {
 		super(send, id,"radarArc");
-		this.pings = [];
+		this.pings = cell([]);
 	}
-	receiveMessage(updateMsg) {
-		let pings = [];
-		for (let i=0; i<updateMsg.pingsLength(); i++) {
-			let ping = updateMsg.pings(i);
-			pings.push(	[ ping.x()
-				, ping.y()
-				, ping.z()
-				]
-			);
+	receiveMessage(bytes) {
+		let msg = Msg.RadarArc.DownMsg.getRootAsDownMsg(new flatbuffers.ByteBuffer(bytes));
+		if (msg.contentType() == Msg.RadarArc.DownMsgContent.Update) {
+			let updateMsg = msg.content(new Msg.RadarArc.Update());
+			let pings = [];
+			for (let i=0; i<updateMsg.pingsLength(); i++) {
+				let ping = updateMsg.pings(i);
+				pings.push(	[ ping.x()
+					, ping.y()
+					, ping.z()
+					]
+				);
+			}
+			this.pings.change(pings);
 		}
-		this.pings = pings;
 	}
 }
 
+export
+class Bridge  extends Port {
+	constructor(send) {
+		super(send,0,"bridge");
+		this.ports = cell([this]);
+		this.cachedPorts = this.ports.cache();
+	}
+	handleMessage(dataBuffer) {
+		let portID = new Uint32Array(dataBuffer)[0];
+		let bytes = new Uint8Array(dataBuffer).slice(4);
+		let ports = this.cachedPorts.grab()
+		if (portID < ports.length) 
+			ports[portID].receiveMessage(bytes);
+	}
+	receiveMessage(bytes) {
+		let msg = Msg.Bridge.DownMsg.getRootAsDownMsg(new flatbuffers.ByteBuffer(bytes));
+		if (msg.contentType() == Msg.Bridge.DownMsgContent.AddPorts) {
+			let innerMsg = msg.content(new Msg.Bridge.AddPorts());
+			let ports = this.cachedPorts.grab();
+			for (let i=0; i<innerMsg.portsLength(); i++) {
+				let port = innerMsg.ports(i);
+				ports.push(	(()=>{
+						if (port==Msg.Bridge.PortType.Wire)
+							return new Wire(this.sendMessage, ports.length);
+						if (port==Msg.Bridge.PortType.LA)
+							return new LA(this.sendMessage, ports.length);
+						if (port==Msg.Bridge.PortType.RadarArc)
+							return new RadarArc(this.sendMessage, ports.length);
+						if (port==Msg.Bridge.PortType.HackEV)
+							return new HackEV(this.sendMessage, ports.length);
+					})()
+				);
+			}
+			this.ports.change(ports);
+		}
+		else if (msg.contentType() == Msg.Bridge.DownMsgContent.RemovePorts) {
+			let innerMsg = msg.content(new Msg.Bridge.RemovePorts());
+			let ports = this.cachedPorts.grab();
+			for (let i=0; i<innerMsg.portsLength(); i++) {
+				let port = innerMsg.ports(i);
+				ports.splice(port,1);
+			}
+			this.ports.change(ports);
+		}
+	}
+}
 
 export
 function portBuilder(send) {
