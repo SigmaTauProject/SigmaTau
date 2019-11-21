@@ -21,40 +21,37 @@ function makeLayout(bridge) {
 			...ports	.filter(p=>p.type=="la")
 				.map(p=>locationArray(p)),
 			...ports	.filter(p=>p.type=="wire")
-				.map(p=>slider().escRef(s=>s.value.changes().forEach(v=>p.set(v)))),
-		].forEach(c=>el.appendChild(c.el?c.el:c));
+				.map(p=>slider(p)),
+			...ports	.filter(p=>p.type=="wire")
+				.map(p=>slider(p,{min:"0"})),
+		].forEach(c=>el.appendChild(c));
 	});
 	return el;
 }
 
 
 
-function slider() {
-	let slider = new GUIItem(
-		div("input",
-			{ type:"range"
-			, min:"-1"
-			, max:"1"
-			, step:"0.01"
-			, value:"0"
-			}
-		)
+function slider(wirePort, config={}) {
+	let slider = div(	"input",
+		{ type	: "range"
+		, min	: config.min	|| "-1"
+		, max	: config.max	|| "1"
+		, step	: config.step	|| "0.01"
+		, value	: config.value	|| "0"
+		}
 	);
-	let c = cell(slider.el.value);
-	slider.el.addEventListener("input",e=>c.change(e.srcElement.value));
-	slider.value = c.map(v=>Number(v));
+	
+	slider.addEventListener("input",e=>wirePort.set(e.srcElement.value));
 	return slider;
 }
 
 function locationArray(laPort) {
 	let svgContent;
-	let svgGui = new GUIItem(
-		svg("svg", 
-			{	viewBox:"-1 -1 2 2",
-				style:"width:100%;height:100%;position:absolute;top:0;left:0;z-index:-1;",
-			},
-			svg("g", (el=>svgContent=el), {transform:"scale(1,-1) scale(0.01)"},
-			),
+	let svgEl = svg("svg", 
+		{	viewBox:"-1 -1 2 2",
+			style:"width:100%;height:100%;position:absolute;top:0;left:0;z-index:-1;",
+		},
+		svg("g", (el=>svgContent=el), {transform:"scale(1,-1) scale(0.01)"},
 		),
 	);
 	let shipEls = [];
@@ -70,7 +67,7 @@ function locationArray(laPort) {
 		},
 		10,
 	);
-	return svgGui;
+	return svgEl;
 }
 
 function radarView(radarArcPort) {
