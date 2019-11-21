@@ -41,7 +41,8 @@ function slider(wirePort, config={}) {
 		}
 	);
 	
-	slider.addEventListener("input",e=>wirePort.set(e.srcElement.value));
+	slider.addEventListener("input",e=>wirePort.set(+e.srcElement.value));
+	wirePort.value.forEach(v=>slider.value=v);
 	return slider;
 }
 
