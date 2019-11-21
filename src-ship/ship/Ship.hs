@@ -21,7 +21,9 @@ import Data.Lifetime.Set
 import Data.Word
 
 import Data.ByteString.Lazy (append)
+import qualified Data.ByteString.Lazy as BS
 import Data.Serialize.Put (runPutLazy,putWord32le)
+import Data.Serialize.Get (runGetLazy,getWord32le)
 import FlatBuffers
 import qualified FlatBuffers.Vector as FB
 import Data.Msg.Common as Common
@@ -83,25 +85,38 @@ newShip world networkConnection = do
 			$ fmap (\(pos,ori)->toNetVec $ unP pos)
 			$ rawEntities
 		withAll activeConnections (\con@(Connection chan downMsgChan)->do
-				----forTChan chan (\msg->sequence_ $ do
-				----		content <- upMsgContent msg
-				----		case content of
-				----			Union (MsgContentWireSet wireSet) -> do
-				----				id <- wireSetId wireSet
-				----				value <- unnetworkFloat <$> wireSetValue wireSet
-				----				return $ do
-				----					print id
-				----					print value
-				----					sequence_ $ writeIORef <$> (thrusterPower <$> thrusters !? fromIntegral id) <*> pure value
-				----			Union (MsgContentWireAdjust wireAdjust) -> do
-				----				id <- wireAdjustId wireAdjust
-				----				value <- unnetworkFloat <$> wireAdjustValue wireAdjust
-				----				return $ do
-				----					print id
-				----					print value
-				----					sequence_ $ modifyIORef' <$> (thrusterPower <$> thrusters !? fromIntegral id) <*> pure (\tv->tv + value)
-				----	)
-				----atomically $ writeTChan downMsgChan entitiesMsg
+				forTChan chan (\(UpMsg wholeMsg)->sequence_ $ do
+						portID <- runGetLazy getWord32le wholeMsg
+						let msg = BS.drop 4 wholeMsg
+						case portID of
+							1 -> do
+								content <- Wire.upMsgContent =<< decode msg
+								case content of
+									Union (Wire.UpMsgContentSet wireSet) -> do
+										value <- unnetworkFloat <$> Wire.setValue wireSet
+										return $ do
+											print value
+											sequence_ $ writeIORef <$> (thrusterPower <$> thrusters !? 0) <*> pure value
+									Union (Wire.UpMsgContentAdjust wireAdjust) -> do
+										value <- unnetworkFloat <$> Wire.adjustValue wireAdjust
+										return $ do
+											print value
+											sequence_ $ modifyIORef' <$> (thrusterPower <$> thrusters !? 0) <*> pure (\tv->tv + value)
+							2 -> do
+								content <- Wire.upMsgContent =<< decode msg
+								case content of
+									Union (Wire.UpMsgContentSet wireSet) -> do
+										value <- unnetworkFloat <$> Wire.setValue wireSet
+										return $ do
+											print value
+											sequence_ $ writeIORef <$> (thrusterPower <$> thrusters !? 1) <*> pure value
+									Union (Wire.UpMsgContentAdjust wireAdjust) -> do
+										value <- unnetworkFloat <$> Wire.adjustValue wireAdjust
+										return $ do
+											print value
+											sequence_ $ modifyIORef' <$> (thrusterPower <$> thrusters !? 1) <*> pure (\tv->tv + value)
+							_ -> return $ return ()
+					)
 				atomically $ writeTChan downMsgChan $ DownMsg radarMsg
 			)
 		
