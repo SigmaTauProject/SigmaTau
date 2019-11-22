@@ -126,16 +126,31 @@ newShip world networkConnection = do
 				atomically $ writeTChan downMsgChan $ DownMsg radarMsg
 			)
 		
-		forceEntity world entity =<< foldl' (+) (V3 0 0 0)
-			<$> (sequence
-				$ (\(Thruster powerRef effect _)->(*^ effect) <$> readIORef powerRef)
-				<$> thrusters
-			)
-		sequence_ =<< fmap (uncurry $ angularForceEntity world entity)
-			<$> (sequence
-				$ (\(Thruster powerRef _ (a, v))->(\p->(p*a, v)) <$> readIORef powerRef)
-				<$> thrusters
-			)
+		----forceEntity world entity =<< foldl' (+) (V3 0 0 0)
+		----	<$> (sequence
+		----		$ (\(Thruster powerRef effect _)->(*^ effect) <$> readIORef powerRef)
+		----		<$> thrusters
+		----	)
+		----sequence_ =<< fmap (uncurry $ angularForceEntity world entity)
+		----	<$> (sequence
+		----		$ (\(Thruster powerRef _ (a, v))->(\p->(p*a, v)) <$> readIORef powerRef)
+		----		<$> thrusters
+		----	)
+		command <- getLine;
+		case command of
+			"m" -> _moveEntity world entity (V3 1 0 0)
+			"n" -> _moveEntity world entity (V3 0 1 0)
+			"o" -> _moveEntity world entity (V3 0 0 1)
+			"r" -> _rotateEntity world entity $ axisAngle (V3 0 0 1) (pi/32)
+			"s" -> _rotateEntity world entity $ axisAngle (V3 0 1 0) (pi/32)
+			"t" -> _rotateEntity world entity $ axisAngle (V3 1 0 0) (pi/32)
+			"-m" -> _moveEntity world entity (V3 (-1) 0 0)
+			"-n" -> _moveEntity world entity (V3 0 (-1) 0)
+			"-o" -> _moveEntity world entity (V3 0 0 (-1))
+			"-r" -> _rotateEntity world entity $ axisAngle (V3 0 0 1) (-pi/23)
+			"-s" -> _rotateEntity world entity $ axisAngle (V3 0 1 0) (-pi/32)
+			"-t" -> _rotateEntity world entity $ axisAngle (V3 1 0 0) (-pi/32)
+			_ -> putStrLn "invalid"
 		----forceEntity world entity =<< V3 <$> (truncate . (*64) <$> readIORef thrusterValueRef) <*> (truncate . (*64) <$> readIORef thrusterValueRef2) <*> pure 0
 	
 	
