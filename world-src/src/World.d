@@ -12,7 +12,6 @@ import std.range;
 import WorldLogic;
 alias World = WorldLogic.World; // To cover this module (also called `World`).
 
-import gl3n.linalg : Quaternion, AxisRotation;
 import math.linear.vector;
 import math.linear.point;
 import math.linear.quaternion;
@@ -43,7 +42,7 @@ extern(C) export {
 	void moveEntity(World* world, Entity er, float x, float y, float z) {
 		//TODO: Update this to use floats and relative ori
 		withEntity(world,er,(ea){
-			WorldLogic.moveEntity(world,ea,(vec!float(x,y,z)*pow(2,16)).vecCast!long);
+			WorldLogic.moveEntity(world,ea, (WorldLogic.getEntityOri(world, ea) * vec!float(x,y,z)*pow(2,16)).vecCast!long);
 		});
 	}
 	void forceEntity(World* world, Entity er, float x, float y, float z) {
@@ -54,7 +53,11 @@ extern(C) export {
 	}
 	void rotateEntity(World* world, Entity er, float w, float x, float y, float z) {
 		withEntity(world,er,(ea){
-			WorldLogic.rotateEntity(world,ea,Quat!float(w,x,y,z) * WorldLogic.getEntityOri(world, ea));
+			////WorldLogic.rotateEntity(world,ea, Quat!float(w,vec!float(x,y,z) * WorldLogic.getEntityOri(world, ea).inverse).normalized);
+			////WorldLogic.rotateEntity(world,ea, WorldLogic.getEntityOri(world, ea).inverse * Quat!float(w,[x,y,z]));
+			Quat!float rot = Quat!float(w,vec!float(x,y,z));
+			rot.axis = rot.axis * WorldLogic.getEntityOri(world, ea);
+			WorldLogic.rotateEntity(world,ea, rot);
 		});
 	}
 	void angularForceEntity(World* world, Entity er, float a, float x, float y, float z) {
