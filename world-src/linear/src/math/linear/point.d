@@ -42,7 +42,7 @@ if	( __traits(compiles, mixin("a.vector"~op~"b"))
 
 
 
-auto opOpAssignImpl(string op = "-", T,U)(ref P!T a, P!U b) 
+auto opOpAssignImpl(string op:"-", T,U)(ref P!T a, P!U b) 
 if	( __traits(compiles, mixin("a.vector"~op~"=b.vector"))
 	)
 {
@@ -54,8 +54,6 @@ if	( __traits(compiles, mixin("a.vector"~op~"=b"))
 	&& (op=="-" || op=="+")
 	)
 {
-	pragma(msg, T);
-	pragma(msg, U);
 	mixin("a.vector"~op~"=b;");
 	return a;
 }

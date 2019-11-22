@@ -1,9 +1,24 @@
 module math.linear.vector;
 
+import std.math;
+
+public import math.linear._qv;
 
 // TODO: Add tests to ensure T is a compotable type (number, etc...).
 struct Vec(T, size_t size) {
-	T[size] data;
+	union {
+		T[size] data;
+		struct {
+			static if (size>=1)
+				T x;
+			static if (size>=2)
+				T y;
+			static if (size>=3)
+				T z;
+			static if (size>=4)
+				T w;
+		}
+	}
 	alias data this;
 	
 	this(T[size] data ...) {
@@ -30,7 +45,40 @@ auto vec(size_t size, T)(T data) {
 	return Vec!(T, size)(data);
 }
 
+
+T magnitudeSquared(T, size_t size)(Vec!(T,size) t) {
+	import std.algorithm;
+	return t.data[].map!"a^^2".sum;
+}
+T magnitude(T, size_t size)(Vec!(T,size) t) {
+	return sqrt(t.magnitudeSquared);
+}
+void normalize(T, size)(Vec!(T,size) t) {
+	t.data[] /= t.magnitude;
+}
+Vec!(T,size) normalized(T, size_t size)(Vec!(T,size) t) {
+	Vec!(T,size) n;
+	n.data[] = t.data[] / t.magnitude;
+	return n;
+}
+
+
+auto cross(T, U)(Vec!(T,3) a, Vec!(U,3) b) {
+	return Vec3!T	( a.y * b.z - b.y * a.z
+		, a.z * b.x - b.z * a.x
+		, a.x * b.y - b.x * a.y
+		);
+}
+auto dot(T, U)(Vec!(T,3) a, Vec!(U,3) b) {
+	import std.algorithm; import std.range;
+	return zip(a.data[],b.data[]).map!"a[0]*a[1]".sum();
+}
+
+
+
+alias Vec2(T) = Vec!(T, 2);
 alias Vec3(T) = Vec!(T, 3);
+alias Vec4(T) = Vec!(T, 4);
 
 auto opBinaryImpl(string op, size_t size,T,U)(Vec!(T, size) a, Vec!(U, size) b) 
 if (__traits(compiles, typeof(mixin("a.data[0]"~op~"b.data[0]"))))
