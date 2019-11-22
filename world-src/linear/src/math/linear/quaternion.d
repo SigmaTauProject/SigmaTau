@@ -14,8 +14,8 @@ struct Quat(T) {
 	union {
 		T[4] data;
 		struct {
-			T angle;
-			T[3] axis;
+			T dataAngle;
+			T[3] dataAxis;
 		}
 		struct {
 			T w;
@@ -25,16 +25,16 @@ struct Quat(T) {
 		}
 	}
 	
-	this(T angle, T[3] axis ...) {
-		this.angle = angle;
-		this.axis = axis;
+	this(T dataAngle, T[3] dataAxis ...) {
+		this.dataAngle = dataAngle;
+		this.dataAxis = dataAxis;
 	}
 	this(T[4] data) {
 		this.data = data;
 	}
-	this(T[3] axis, T angle) {
-		this.angle = angle;
-		this.axis = axis;
+	this(T[3] dataAxis, T dataAngle) {
+		this.dataAngle = dataAngle;
+		this.dataAxis = dataAxis;
 	}
 	this(typeof(this) v) {
 		this.data = v.data;
@@ -44,7 +44,7 @@ struct Quat(T) {
 		if (data.angle==0)
 			this.data = [1,0,0,0];
 		this.w = cos(data.angle/2);
-		this.axis[] = data.axis[] * sin(data.angle/2);
+		this.dataAxis[] = data.axis[] * sin(data.angle/2);
 	}
 	
 	auto opBinary(string op, T)(T b) {////if (__traits(compiles, opBinaryImpl!op(this, b))){
@@ -60,11 +60,11 @@ struct Quat(T) {
 auto quat(T)(T[4] data) {
 	return Quat!T(data);
 }
-auto quat(T)(T angle, T[3] axis ...) {
-	return Quat!T(angle, axis);
+auto quat(T)(T dataAngle, T[3] dataAxis ...) {
+	return Quat!T(dataAngle, dataAxis);
 }
-auto quat(T)(T[3] axis, T angle) {
-	return Quat!T(angle, axis);
+auto quat(T)(T[3] dataAxis, T dataAngle) {
+	return Quat!T(dataAngle, dataAxis);
 }
 auto quat(T)(Quat!T data) {
 	return Quat!T(data);
@@ -92,6 +92,24 @@ Quat!T normalized(T)(Quat!T t) {
 	Quat!T n;
 	n.data[] = t.data[] / t.magnitude;
 	return n;
+}
+
+
+T angle(T)(Quat!T t) {
+	return 2 * acos(t.w);
+}
+Vec!(T,3) axis(T)(Quat!T t) {
+	Vec!(T,3) n;
+	n.data[] = t.dataAxis[] / sqrt(1 - t.w*t.w);
+	return n;
+}
+Quat!T angle(T)(ref Quat!T t, T n) {
+	t.w = cos(n/2);
+	return t;
+}
+Quat!T axis(T)(ref Quat!T t, Vec!(T,3) n) {
+	t.dataAxis[] = n[] * sin(t.angle/2);
+	return t;
 }
 
 
