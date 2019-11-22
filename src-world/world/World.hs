@@ -58,6 +58,8 @@ newEntity (World world) entityType (P (V3 x y z)) = EntityRef <$> withForeignPtr
 
 _moveEntity :: World -> EntityRef -> V3 Float -> IO ()
 _moveEntity (World world) (EntityRef entityRef) (V3 x y z) = withForeignPtr world (\wld->moveEntityFFI wld entityRef (CFloat x) (CFloat y) (CFloat z))
+_rotateEntity :: World -> EntityRef -> Quaternion Float -> IO ()
+_rotateEntity (World world) (EntityRef entityRef) (Quaternion w (V3 x y z)) = withForeignPtr world (\wld->rotateEntityFFI wld entityRef (CFloat w) (CFloat x) (CFloat y) (CFloat z))
 
 forceEntity :: World -> EntityRef -> V3 Float -> IO ()
 forceEntity (World world) (EntityRef entityRef) (V3 x y z) = withForeignPtr world (\wld->forceEntityFFI wld entityRef (CFloat x) (CFloat y) (CFloat z))
