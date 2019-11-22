@@ -1,0 +1,10 @@
+name "linear"
+description "Linear Math"
+authors "Jonathan Levi"
+copyright "Copyright © 2018, Jonathan Levi"
+license "CC0"
+
+target	"library"
+targetPath	"build"
+
+dependency "cst"	version="~>1.0"
