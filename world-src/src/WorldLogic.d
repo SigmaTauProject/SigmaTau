@@ -124,9 +124,9 @@ public
 EntityRef createEntity	( World*	world	
 	, EntityType	type	
 	, PVec3!long	pos	=point(vec!long(0,0,0))
-	, Quat!float	ori	=[1,0,0,0]// TODO this should be identity
+	, Quat!float	ori	=math.linear.quaternion.identity!float
 	, Vec3!int	vel	=vec!int(0,0,0)
-	, AxisRot!float	anv	=[0,0,0,0]// TODO this should be identity
+	, AxisRot!float	anv	=math.linear.axis_rot.identity!float
 ) {
 	EntityRef addEntity(World* world, Entity* entity) {
 		// TODO: Fix this, it is still unsafe, as `world.entities` is not mutex locked.
