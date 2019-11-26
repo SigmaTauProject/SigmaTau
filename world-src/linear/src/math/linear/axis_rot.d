@@ -87,16 +87,11 @@ AxisRot!T normalized(T)(AxisRot!T t) {
 
 
 void invert(T)(AxisRot!T t) {
-	t.x = -t.x;
-	t.y = -t.y;
-	t.z = -t.z;
+	t.axis.invert;
 }
-alias conjugate = invert;
-
 AxisRot!T inverse(T)(AxisRot!T t) {
 	return AxisRot!T(t.a, [-t.x, -t.y, -t.z]);
 }
-alias conjugated = inverse;
 
 
 

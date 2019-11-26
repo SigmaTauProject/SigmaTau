@@ -37,29 +37,46 @@ struct Vec(T, size_t size) {
 	auto opOpAssign(string op, T)(T b) if (__traits(compiles, opOpAssignImpl!op(this, b))){
 		return opOpAssignImpl!op(this, b);
 	}
+	
+	
+	T magnitudeSquared() {
+		import std.algorithm;
+		return this.data[].map!"a^^2".sum;
+	}
+	T magnitude() {
+		return cast(T) sqrt(cast(real) this.magnitudeSquared);
+	}
+	void normalize(bool zero=false)() {
+		if (zero && this.magnitude == 0)
+			this.data[] = 0;
+		else
+			this.data[] /= this.magnitude;
+	}
+	Vec!(T,size) normalized(bool zero=false)() {
+		Vec!(T,size) n;
+		if (zero && this.magnitude == 0)
+			n.data[] = 0;
+		else
+			n.data[] = this.data[] / this.magnitude;
+		return n;
+	}
+	
+	
+	
+	void invert() {
+		this.data[] = -this.data[];
+	}
+	Vec!(T,size) inverse() {
+		Vec!(T,size) n;
+		n.data[] = -this.data[];
+		return n;
+	}
 }
 auto vec(T, size_t size)(T[size] data ...) {
 	return Vec!(T, size)(data);
 }
 auto vec(size_t size, T)(T data) {
 	return Vec!(T, size)(data);
-}
-
-
-T magnitudeSquared(T, size_t size)(Vec!(T,size) t) {
-	import std.algorithm;
-	return t.data[].map!"a^^2".sum;
-}
-T magnitude(T, size_t size)(Vec!(T,size) t) {
-	return sqrt(t.magnitudeSquared);
-}
-void normalize(T, size)(Vec!(T,size) t) {
-	t.data[] /= t.magnitude;
-}
-Vec!(T,size) normalized(T, size_t size)(Vec!(T,size) t) {
-	Vec!(T,size) n;
-	n.data[] = t.data[] / t.magnitude;
-	return n;
 }
 
 

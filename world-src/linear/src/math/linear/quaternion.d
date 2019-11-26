@@ -41,13 +41,16 @@ struct Quat(T) {
 	}
 	
 	this(AxisRot!T data) {
+		import std.stdio;
 		if (data.angle==0)
 			this.data = [1,0,0,0];
-		this.w = cos(data.angle/2);
-		this.dataAxis[] = data.axis[] * sin(data.angle/2);
+		else {
+			this.w = cos(data.angle/2);
+			this.dataAxis[] = data.axis[] * sin(data.angle/2);
+		}
 	}
 	
-	auto opBinary(string op, T)(T b) {////if (__traits(compiles, opBinaryImpl!op(this, b))){
+	auto opBinary(string op, T)(T b) if (__traits(compiles, opBinaryImpl!op(this, b))){
 		return opBinaryImpl!op(this, b);
 	}
 	auto opBinaryRight(string op, T)(T a) if (__traits(compiles, opBinaryImpl!op(a, this))){
@@ -56,7 +59,77 @@ struct Quat(T) {
 	auto opOpAssign(string op, T)(T b) if (__traits(compiles, opOpAssignImpl!op(this, b))){
 		return opOpAssignImpl!op(this, b);
 	}
+	
+	
+	static {
+		Quat!T fromAxisRot(T)(AxisRot!T a) {
+			return Quat!T(a);
+		}
+		Quat!T fromAxisRot(T)(Vec!(T,3) axis, T angle) {
+			return Quat!T(AxisRot!T(axis,angle));
+		}
+		Quat!T fromAxisRot(T)(T angle, Vec!(T,3) axis) {
+			return Quat!T(AxisRot!T(axis,angle));
+		}
+		Quat!T fromMagnitudeVector(T)(Vec!(T,3) a) {
+			return Quat!T(AxisRot!T(a.magnitude,a.normalized));
+		}
+	}
+	
+	@property
+	T magnitudeSquared() {
+		return this.w^^2 + this.x^^2 + this.y^^2 + this.z^^2;
+	}
+	@property
+	T magnitude() {
+		return sqrt(this.magnitudeSquared);
+	}
+	void normalize() {
+		this.data[] /= this.magnitude;
+	}
+	Quat!T normalized() {
+		Quat!T n;
+		n.data[] = this.data[] / this.magnitude;
+		return n;
+	}
+	
+	@property {
+		T angle() {
+			return 2 * acos(this.w);
+		}
+		Vec!(T,3) axis() {
+			Vec!(T,3) n;
+			n.data[] = this.dataAxis[] / sqrt(1 - this.w*this.w);
+			return n;
+		}
+		void angle(T n) {
+			this.w = cos(n/2);
+		}
+		void axis(Vec!(T,3) n) {
+			this.dataAxis[] = n[] * sin(this.angle/2);
+		}
+	}
+	
+	
+	static
+	Quat!T identity() {
+		return quat!T(1,[0,0,0]);
+	}
+	
+	
+	void invert() {
+		this.x = -this.x;
+		this.y = -this.y;
+		this.z = -this.z;
+	}
+	alias conjugate = invert;
+	
+	Quat!T inverse() {
+		return Quat!T(this.w, [-this.x, -this.y, -this.z]);
+	}
+	alias conjugated = inverse;
 }
+
 auto quat(T)(T[4] data) {
 	return Quat!T(data);
 }
@@ -73,62 +146,6 @@ auto quat(T)(Quat!T data) {
 auto quat(T)(AxisRot!T data) {
 	return Quat!T(data);
 }
-
-Quat!T fromAxisRot(T)(AxisRot!T a) {
-	return Quat!T(a);
-}
-
-T magnitudeSquared(T)(Quat!T t) {
-	return t.w^^2 + t.x^^2 + t.y^^2 + t.z^^2;
-}
-
-T magnitude(T)(Quat!T t) {
-	return sqrt(t.magnitudeSquared);
-}
-void normalize(T)(Quat!T t) {
-	t.data[] /= t.magnitude;
-}
-Quat!T normalized(T)(Quat!T t) {
-	Quat!T n;
-	n.data[] = t.data[] / t.magnitude;
-	return n;
-}
-
-
-T angle(T)(Quat!T t) {
-	return 2 * acos(t.w);
-}
-Vec!(T,3) axis(T)(Quat!T t) {
-	Vec!(T,3) n;
-	n.data[] = t.dataAxis[] / sqrt(1 - t.w*t.w);
-	return n;
-}
-Quat!T angle(T)(ref Quat!T t, T n) {
-	t.w = cos(n/2);
-	return t;
-}
-Quat!T axis(T)(ref Quat!T t, Vec!(T,3) n) {
-	t.dataAxis[] = n[] * sin(t.angle/2);
-	return t;
-}
-
-
-Quat!T identity(T)() {
-	return quat!T(1,[0,0,0]);
-}
-
-
-void invert(T)(Quat!T t) {
-	t.x = -t.x;
-	t.y = -t.y;
-	t.z = -t.z;
-}
-alias conjugate = invert;
-
-Quat!T inverse(T)(Quat!T t) {
-	return Quat!T(t.w, [-t.x, -t.y, -t.z]);
-}
-alias conjugated = inverse;
 
 
 
