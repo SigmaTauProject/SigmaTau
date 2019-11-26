@@ -14,7 +14,6 @@ import std.range;
 import math.linear.vector;
 import math.linear.point;
 import math.linear.quaternion;
-import math.linear.axis_rot;
 
 import W = World;
 
@@ -36,7 +35,7 @@ struct Entity {
 	PVec3!long pos;
 	Vec3!int vel;
 	Quat!float ori;
-	AxisRot!float anv;
+	Vec3!float anv;
 	Mutex mutex;
 	MonoTime time;
 }
@@ -124,9 +123,9 @@ public
 EntityRef createEntity	( World*	world	
 	, EntityType	type	
 	, PVec3!long	pos	=point(vec!long(0,0,0))
-	, Quat!float	ori	=math.linear.quaternion.identity!float
-	, Vec3!int	vel	=vec!int(0,0,0)
-	, AxisRot!float	anv	=math.linear.axis_rot.identity!float
+	, Quat!float	ori	=Quat!float.identity
+	, Vec!(int,3)	vel	=vec!int(0,0,0)
+	, Vec!(float,3)	anv	=Vec!(float,3)(0,0,0)
 ) {
 	EntityRef addEntity(World* world, Entity* entity) {
 		// TODO: Fix this, it is still unsafe, as `world.entities` is not mutex locked.
@@ -149,14 +148,13 @@ void rotateEntity(World* world, EntityAccess ea, Quat!float a) {
 	world.entities[ea.er].ori = a * world.entities[ea.er].ori;
 }
 public
-void angularForceEntity(World* world, EntityAccess ea, AxisRot!float a) {
- 	world.entities[ea.er].anv = a * world.entities[ea.er].anv;
+void angularForceEntity(World* world, EntityAccess ea, Vec3!float a) {
+ 	world.entities[ea.er].anv += a;
 }
 
 public
 PVec3!long getEntityPos(World* world, EntityAccess ea) {
 	return world.entities[ea.er].pos + getDurVel(world.entities[ea.er].vel, world.time-world.entities[ea.er].time);
-	////return world.entities[ea.er].pos;
 }
 public
 Quat!float getEntityOri(World* world, EntityAccess ea) {
@@ -169,8 +167,8 @@ private {
 	Vec3!int getDurVel(Vec3!int vel, Duration dur) {
 		return vel * dur.total!"msecs".cst!int;
 	}
-	AxisRot!float getDurAnv(AxisRot!float anv, Duration dur) {
-		return anv * (dur.total!"msecs".cst!float/1000);
+	Quat!float getDurAnv(Vec3!float anv, Duration dur) {
+		return Quat!float.fromMagnitudeVector(anv * (dur.total!"msecs".cst!float/1000));
 	}
 }
 

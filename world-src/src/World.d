@@ -60,9 +60,9 @@ extern(C) export {
 			WorldLogic.rotateEntity(world,ea, rot);
 		});
 	}
-	void angularForceEntity(World* world, Entity er, float a, float x, float y, float z) {
+	void angularForceEntity(World* world, Entity er, float x, float y, float z) {
 		withEntity(world,er,(ea){
-			WorldLogic.angularForceEntity(world,ea, AxisRot!float(a,Vec3!float(x,y,z)));
+			WorldLogic.angularForceEntity(world,ea, Vec3!float(x,y,z)*WorldLogic.getEntityOri(world, ea));
 		});
 	}
 	void angularEulerForceEntity(World* world, Entity er, float yaw, float pitch, float roll) {
