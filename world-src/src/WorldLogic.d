@@ -11,7 +11,9 @@ import core.sync.mutex;
 import std.algorithm;
 import std.range;
 
-import gl3n.linalg;
+import math.linear.vector;
+import math.linear.point;
+import math.linear.quaternion;
 
 import W = World;
 
@@ -30,10 +32,10 @@ struct World {
 private
 struct Entity {
 	EntityType type;
-	vec3i pos;
-	vec3i vel;
-	quatf ori;
-	arotf anv;
+	PVec3!long pos;
+	Vec3!int vel;
+	Quat!float ori;
+	Vec3!float anv;
 	Mutex mutex;
 	MonoTime time;
 }
@@ -53,7 +55,7 @@ World* newWorld(MonoTime time) {
 			worldThread(world)();
 		}
 		catch (Throwable e) {
-			writeln(e);
+			writeln("[World]: ",e);
 			throw e;
 		}
 	}).start();
@@ -73,7 +75,7 @@ void delegate() worldThread(World* world) {
 			foreach (i,e; world.entities) {
 				withEntity(world,i,(_){
 					e.time = updateTime;
-					e.pos += getDurVel(e.vel,loopDur);
+					e.pos = e.pos + getDurVel(e.vel,loopDur);
 					e.ori = getDurAnv(e.anv,loopDur) * e.ori;
 					e.ori.normalize();
 				});
@@ -120,10 +122,10 @@ T withEntity(T)(World* world, EntityRef er, T delegate(EntityAccess) callback) {
 public
 EntityRef createEntity	( World*	world	
 	, EntityType	type	
-	, vec3i	pos	=vec3i(0,0,0)
-	, quatf	ori	=quatf.identity()
-	, vec3i	vel	=vec3i(0,0,0)
-	, arotf	anv	=arotf.identity()
+	, PVec3!long	pos	=point(vec!long(0,0,0))
+	, Quat!float	ori	=Quat!float.identity
+	, Vec!(int,3)	vel	=vec!int(0,0,0)
+	, Vec!(float,3)	anv	=Vec!(float,3)(0,0,0)
 ) {
 	EntityRef addEntity(World* world, Entity* entity) {
 		// TODO: Fix this, it is still unsafe, as `world.entities` is not mutex locked.
@@ -134,74 +136,58 @@ EntityRef createEntity	( World*	world
 }
 
 public
-void moveEntity(World* world, EntityAccess ea, vec3i a) {
+void moveEntity(World* world, EntityAccess ea, Vec3!long a) {
 	world.entities[ea.er].pos += a;
 }
 public
-void forceEntity(World* world, EntityAccess ea, vec3i a) {
+void forceEntity(World* world, EntityAccess ea, Vec3!int a) {
 	world.entities[ea.er].vel += a;
 }
 public
-void rotateEntity(World* world, EntityAccess ea, quatf a) {
+void rotateEntity(World* world, EntityAccess ea, Quat!float a) {
 	world.entities[ea.er].ori = a * world.entities[ea.er].ori;
-	world.entities[ea.er].ori.normalize();
 }
 public
-void angularForceEntity(World* world, EntityAccess ea, arotf a) {
-	world.entities[ea.er].anv = a * world.entities[ea.er].anv;
-	////world.entities[ea.er].anv.normalize();
+void angularForceEntity(World* world, EntityAccess ea, Vec3!float a) {
+ 	world.entities[ea.er].anv += a;
 }
 
 public
-vec3i getEntityPos(World* world, EntityAccess ea) {
+PVec3!long getEntityPos(World* world, EntityAccess ea) {
 	return world.entities[ea.er].pos + getDurVel(world.entities[ea.er].vel, world.time-world.entities[ea.er].time);
-	////return world.entities[ea.er].pos;
 }
 public
-quatf getEntityOri(World* world, EntityAccess ea) {
+Quat!float getEntityOri(World* world, EntityAccess ea) {
 	return getDurAnv(world.entities[ea.er].anv, world.time-world.entities[ea.er].time) * world.entities[ea.er].ori;
 }
 
 
 
 private {
-	vec3i getDurVel(vec3i vel, Duration dur) {
+	Vec3!int getDurVel(Vec3!int vel, Duration dur) {
 		return vel * dur.total!"msecs".cst!int;
 	}
-	arotf getDurAnv(arotf anv, Duration dur) {
-		return anv * (dur.total!"msecs".cst!float/1000);
+	Quat!float getDurAnv(Vec3!float anv, Duration dur) {
+		return Quat!float.fromMagnitudeVector(anv * (dur.total!"msecs".cst!float/1000));
 	}
 }
 
 
 
 public {
-	alias vec2f = vec2;
-	alias vec3f = vec3;
-	alias vec4f = vec4;
-	alias vec2l = Vector!(long,2);
-	alias vec3l = Vector!(long,3);
-	alias vec4l = Vector!(long,4);
-	alias Vec2(Type) = Vector!(Type,2);
-	alias Vec3(Type) = Vector!(Type,3);
-	alias Vec4(Type) = Vector!(Type,4);
 	
-	alias quatf = Quaternion!float;
-	
-	alias arotf = AxisRotation!float;
-	
-	Type[L] ffiVec(Type, size_t L)(Vector!(Type,L) xs) {
-		return xs.vector;
+	T[size] ffiVec(T, size_t size)(Vec!(T,size) xs) {
+		return xs.data;
 	}
-	NT[L] ffiVec(NT, Type, size_t L)(Vector!(Type,L) xs) {
-		return xs.vector.arrayCast!NT;
+	NT[size] ffiVec(NT, T, size_t size)(Vec!(T,size) xs) {
+		return xs.data.arrayCast!NT;
 	}
 	
-	Type[4] ffiQuat(Type)(Quaternion!Type xs) {
-		return xs.quaternion;
+	T[4] ffiQuat(T)(Quat!T xs) {
+		return xs.data;
 	}
-	NT[4] ffiQuat(NT, Type)(Vector!Type xs) {
-		return xs.quaterion.arrayCast!NT;
+	NT[4] ffiQuat(NT, T)(Quat!T xs) {
+		return xs.data.arrayCast!NT;
 	}
 	
 	NT[] arrayCast(NT,OT)(OT[] xs) {
@@ -215,8 +201,8 @@ public {
 		return nxs;
 	}
 	
-	Vector!(NT,L) vecCast(NT,OT,size_t L)(Vector!(OT,L) xs) {
-		return Vector!(NT,L)(xs.vector.arrayCast!NT);
+	Vec!(NT,L) vecCast(NT,OT,size_t L)(Vec!(OT,L) xs) {
+		return vec(xs.data.arrayCast!NT);
 	}
 	
 	

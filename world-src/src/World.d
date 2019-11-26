@@ -12,7 +12,10 @@ import std.range;
 import WorldLogic;
 alias World = WorldLogic.World; // To cover this module (also called `World`).
 
-import gl3n.linalg;
+import math.linear.vector;
+import math.linear.point;
+import math.linear.quaternion;
+import math.linear.axis_rot;
 
 
 alias Entity = uint;
@@ -34,43 +37,32 @@ extern(C) export {
 	
 	
 	Entity newEntity(World* world, EntityType type, int x, int y, int z) {
-		return WorldLogic.createEntity(world, type, vec3i(x,y,z)*pow(2,16)).cst!Entity;
+		return WorldLogic.createEntity(world, type, point(vec!long(x,y,z)*pow(2,16))).cst!Entity;
 	}
-	void moveEntity(World* world, Entity er, int x, int y, int z) {
+	void moveEntity(World* world, Entity er, float x, float y, float z) {
 		//TODO: Update this to use floats and relative ori
 		withEntity(world,er,(ea){
-			WorldLogic.moveEntity(world,ea,vec3i(x,y,z)*pow(2,16));
+			WorldLogic.moveEntity(world,ea, (WorldLogic.getEntityOri(world, ea) * vec!float(x,y,z)*pow(2,16)).vecCast!long);
 		});
 	}
 	void forceEntity(World* world, Entity er, float x, float y, float z) {
 		withEntity(world,er,(ea){
-			auto force = vec3f(x,y,z) * WorldLogic.getEntityOri(world, ea);
+			auto force = vec!float(x,y,z) * WorldLogic.getEntityOri(world, ea);
 			WorldLogic.forceEntity(world,ea, (force*(pow(2f,16f)/1000f)).vecCast!int);
 		});
 	}
 	void rotateEntity(World* world, Entity er, float w, float x, float y, float z) {
 		withEntity(world,er,(ea){
-			WorldLogic.rotateEntity(world,ea,quatf(w,x,y,z) * WorldLogic.getEntityOri(world, ea));
+			////WorldLogic.rotateEntity(world,ea, Quat!float(w,vec!float(x,y,z) * WorldLogic.getEntityOri(world, ea).inverse).normalized);
+			////WorldLogic.rotateEntity(world,ea, WorldLogic.getEntityOri(world, ea).inverse * Quat!float(w,[x,y,z]));
+			Quat!float rot = Quat!float(w,vec!float(x,y,z));
+			rot.axis = rot.axis * WorldLogic.getEntityOri(world, ea);
+			WorldLogic.rotateEntity(world,ea, rot);
 		});
 	}
-	void angularForceEntity(World* world, Entity er, float a, float x, float y, float z) {
+	void angularForceEntity(World* world, Entity er, float x, float y, float z) {
 		withEntity(world,er,(ea){
-			WorldLogic.angularForceEntity(world,ea, (arotf(a,x,y,z) * WorldLogic.getEntityOri(world, ea)).to_axis_rotation);
-		});
-	}
-	void angularXForceEntity(World* world, Entity er, float a) {
-		withEntity(world,er,(ea){
-			WorldLogic.angularForceEntity(world,ea, (arotf.xrotation(a) * WorldLogic.getEntityOri(world, ea)).to_axis_rotation);
-		});
-	}
-	void angularYForceEntity(World* world, Entity er, float a) {
-		withEntity(world,er,(ea){
-			WorldLogic.angularForceEntity(world,ea, (arotf.yrotation(a) * WorldLogic.getEntityOri(world, ea)).to_axis_rotation);
-		});
-	}
-	void angularZForceEntity(World* world, Entity er, float a) {
-		withEntity(world,er,(ea){
-			WorldLogic.angularForceEntity(world,ea, (arotf.zrotation(a) * WorldLogic.getEntityOri(world, ea)).to_axis_rotation);
+			WorldLogic.angularForceEntity(world,ea, Vec3!float(x,y,z)*WorldLogic.getEntityOri(world, ea));
 		});
 	}
 	void angularEulerForceEntity(World* world, Entity er, float yaw, float pitch, float roll) {

@@ -9,6 +9,8 @@ import Linear.Quaternion
 
 import Data.List (foldl')
 import Data.IORef
+import Control.Monad (void, forever)
+import Control.Concurrent (forkIO)
 import Control.Concurrent.STM (atomically)
 import Control.Concurrent.STM.TChan
 
@@ -36,18 +38,22 @@ type NetworkConnection = (TChan (Lifetime Connection))
 
 data Thruster = Thruster	{ thrusterPower :: IORef Float
 	, thrusterEffect :: V3 Float
+	, thrusterAngularEffect :: V3 Float
 	}
 
-makeThruster effect = Thruster <$> newIORef 0 <*> pure effect
+makeThruster effect angularEffect = Thruster <$> newIORef 0 <*> pure effect <*> pure angularEffect
 
 newShip :: World -> NetworkConnection -> IO (IO ())
 newShip world networkConnection = do
 	activeConnections <- newLifetimeSet
 	entity <- newEntity world TypeShip (P $ V3 0 0 0)
-	angularZForceEntity world entity 0.8
-	angularYForceEntity world entity 0.0
+	_moveEntity world entity (V3 1 0 0)
+	----angularZForceEntity world entity 0.8
+	----angularYForceEntity world entity 0.0
 	
-	thrusters <- sequence $ [makeThruster (V3 1 0 0), makeThruster (V3 0 1 0)]
+	thrusters <- sequence $ [makeThruster (V3 1 0 0) (V3 0 0 3), makeThruster (V3 0 0 0) (V3 0 0 0.01)]
+	
+	commandChan <- atomically newTChan
 	
 	return $ do
 		forTChan networkConnection $ (\con -> do
@@ -124,7 +130,47 @@ newShip world networkConnection = do
 				atomically $ writeTChan downMsgChan $ DownMsg radarMsg
 			)
 		
-		forceEntity world entity =<< foldl' (+) (V3 0 0 0) <$> (sequence $ (\(Thruster powerRef effect)->(*^ effect) <$> readIORef powerRef) <$> thrusters)
+		forceEntity world entity =<< foldl' (+) (V3 0 0 0)
+			<$> (sequence
+				$ (\(Thruster powerRef effect _)->(*^ effect) <$> readIORef powerRef)
+				<$> thrusters
+			)
+		sequence_ =<< fmap (angularForceEntity world entity)
+			<$> (sequence
+				$ (\(Thruster powerRef _ a)->(\p->p*^a) <$> readIORef powerRef)
+				<$> thrusters
+			)
+		forkIO $ forever $ do
+			command <- getLine
+			atomically $ writeTChan commandChan command
+		forTChan commandChan (\command-> case command of
+				"" -> return ()
+				"=m" -> _moveEntity world entity (V3 1 0 0)
+				"=n" -> _moveEntity world entity (V3 0 1 0)
+				"=o" -> _moveEntity world entity (V3 0 0 1)
+				"=r" -> _rotateEntity world entity $ axisAngle (V3 1 0 0) (pi/32)
+				"=s" -> _rotateEntity world entity $ axisAngle (V3 0 1 0) (pi/32)
+				"=t" -> _rotateEntity world entity $ axisAngle (V3 0 0 1) (pi/32)
+				"=-m" -> _moveEntity world entity (V3 (-1) 0 0)
+				"=-n" -> _moveEntity world entity (V3 0 (-1) 0)
+				"=-o" -> _moveEntity world entity (V3 0 0 (-1))
+				"=-r" -> _rotateEntity world entity $ axisAngle (V3 1 0 0) (-pi/23)
+				"=-s" -> _rotateEntity world entity $ axisAngle (V3 0 1 0) (-pi/32)
+				"=-t" -> _rotateEntity world entity $ axisAngle (V3 0 0 1) (-pi/32)
+				"m" -> forceEntity world entity (V3 1 0 0)
+				"n" -> forceEntity world entity (V3 0 1 0)
+				"o" -> forceEntity world entity (V3 0 0 1)
+				"r" -> angularForceEntity world entity (V3 (pi/32) 0 0)
+				"s" -> angularForceEntity world entity (V3 0 (pi/32) 0)
+				"t" -> angularForceEntity world entity (V3 0 0 (pi/32))
+				"-m" -> forceEntity world entity (V3 (-1) 0 0)
+				"-n" -> forceEntity world entity (V3 0 (-1) 0)
+				"-o" -> forceEntity world entity (V3 0 0 (-1))
+				"-r" -> angularForceEntity world entity (V3 (-pi/32) 0 0)
+				"-s" -> angularForceEntity world entity (V3 0 (-pi/32) 0)
+				"-t" -> angularForceEntity world entity (V3 0 0 (-pi/32))
+				_ -> putStrLn "invalid"
+			)
 		----forceEntity world entity =<< V3 <$> (truncate . (*64) <$> readIORef thrusterValueRef) <*> (truncate . (*64) <$> readIORef thrusterValueRef2) <*> pure 0
 	
 	

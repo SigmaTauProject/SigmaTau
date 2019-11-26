@@ -16,8 +16,8 @@ function makeLayout(bridge) {
 		[
 			...ports	.filter(p=>p.type=="hackEV")
 				.map(p=>hackEV3DView(p)),
-			...ports	.filter(p=>p.type=="radarArc")
-				.map(p=>radarView(p)),
+			////...ports	.filter(p=>p.type=="radarArc")
+			////	.map(p=>radarView(p)),
 			...ports	.filter(p=>p.type=="la")
 				.map(p=>locationArray(p)),
 			...ports	.filter(p=>p.type=="wire")
@@ -114,11 +114,14 @@ function hackEV3DView(hackEVPort) {
 	////camera.position.y = 0.5*8;
 	////camera.position.x = -2*8;
 	////camera.rotation.y = 0.8;
-	var camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+
+	////var camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+	////camera.position.z = 2*8;
+	////camera.position.y = 2*8;
+	////camera.position.x = 0.5*8;
+	////camera.rotation.x = -0.8;
+	var camera = new THREE.OrthographicCamera(-12,12,8,-8, 0.1, 1000);
 	camera.position.z = 2*8;
-	camera.position.y = 2*8;
-	camera.position.x = 0.5*8;
-	camera.rotation.x = -0.8;
 	
 	
 	////var axesHelper = new THREE.AxesHelper( 5 );
