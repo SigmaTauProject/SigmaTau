@@ -33,6 +33,8 @@ foreign import ccall "&destroyWorld" destroyWorldFFIPtr :: FunPtr (Ptr () -> IO(
 foreign import ccall "updateWorld" updateWorldFFI :: Ptr() -> IO ()
 foreign import ccall "newEntity" newEntityFFI :: Ptr() -> Int32 -> Int32 -> Int32 -> Int32 -> IO (ERefFFI)
 
+foreign import ccall "locatedForceEntity" locatedForceEntityFFI :: Ptr() -> ERefFFI -> CFloat -> CFloat -> CFloat -> CFloat -> CFloat -> CFloat -> IO ()
+
 foreign import ccall "moveEntity" moveEntityFFI :: Ptr() -> ERefFFI -> CFloat -> CFloat -> CFloat -> IO ()
 foreign import ccall "forceEntity" forceEntityFFI :: Ptr() -> ERefFFI -> CFloat -> CFloat -> CFloat -> IO ()
 
@@ -55,6 +57,9 @@ updateWorld (World world) = withForeignPtr world (\wld->updateWorldFFI wld)
 
 newEntity :: World -> EntityType -> Point V3 Int32 -> IO EntityRef
 newEntity (World world) entityType (P (V3 x y z)) = EntityRef <$> withForeignPtr world (\wld->newEntityFFI wld (fromIntegral $ fromEnum entityType) x y z)
+
+locatedForceEntity :: World -> EntityRef -> V3 Float -> Point V3 Float -> IO ()
+locatedForceEntity (World world) (EntityRef entityRef) (V3 fx fy fz) (P (V3 px py pz)) = withForeignPtr world (\wld->locatedForceEntityFFI wld entityRef (CFloat fx) (CFloat fy) (CFloat fz) (CFloat px) (CFloat py) (CFloat pz))
 
 _moveEntity :: World -> EntityRef -> V3 Float -> IO ()
 _moveEntity (World world) (EntityRef entityRef) (V3 x y z) = withForeignPtr world (\wld->moveEntityFFI wld entityRef (CFloat x) (CFloat y) (CFloat z))

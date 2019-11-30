@@ -39,6 +39,14 @@ extern(C) export {
 	Entity newEntity(World* world, EntityType type, int x, int y, int z) {
 		return WorldLogic.createEntity(world, type, point(vec!long(x,y,z)*pow(2,16))).cst!Entity;
 	}
+	void locatedForceEntity(World* world, Entity er, float fx, float fy, float fz, float px, float py, float pz) {
+		withEntity(world,er,(ea){
+			auto force = vec!float(fx,fy,fz) * WorldLogic.getEntityOri(world, ea);
+			auto point = vec!float(px,py,pz) * WorldLogic.getEntityOri(world, ea);
+			WorldLogic.forceEntity(world,ea, (force*(pow(2f,16f)/1000f)).vecCast!int);
+			WorldLogic.angularForceEntity(world,ea, cross(point,force));
+		});
+	}
 	void moveEntity(World* world, Entity er, float x, float y, float z) {
 		//TODO: Update this to use floats and relative ori
 		withEntity(world,er,(ea){

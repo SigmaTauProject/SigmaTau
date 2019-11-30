@@ -38,7 +38,7 @@ type NetworkConnection = (TChan (Lifetime Connection))
 
 data Thruster = Thruster	{ thrusterPower :: IORef Float
 	, thrusterEffect :: V3 Float
-	, thrusterAngularEffect :: V3 Float
+	, thrusterOffset :: Point V3 Float
 	}
 
 makeThruster effect angularEffect = Thruster <$> newIORef 0 <*> pure effect <*> pure angularEffect
@@ -51,7 +51,7 @@ newShip world networkConnection = do
 	----angularZForceEntity world entity 0.8
 	----angularYForceEntity world entity 0.0
 	
-	thrusters <- sequence $ [makeThruster (V3 1 0 0) (V3 0 0 3), makeThruster (V3 0 0 0) (V3 0 0 0.01)]
+	thrusters <- sequence $ [makeThruster (V3 1 0 0) (P$V3 0 0 0), makeThruster (V3 1 0 0) (P$V3 0 0.1 0)]
 	
 	commandChan <- atomically newTChan
 	
@@ -129,17 +129,17 @@ newShip world networkConnection = do
 				atomically $ writeTChan downMsgChan $ DownMsg entitiesMsg
 				atomically $ writeTChan downMsgChan $ DownMsg radarMsg
 			)
-		
-		forceEntity world entity =<< foldl' (+) (V3 0 0 0)
-			<$> (sequence
-				$ (\(Thruster powerRef effect _)->(*^ effect) <$> readIORef powerRef)
-				<$> thrusters
-			)
-		sequence_ =<< fmap (angularForceEntity world entity)
-			<$> (sequence
-				$ (\(Thruster powerRef _ a)->(\p->p*^a) <$> readIORef powerRef)
-				<$> thrusters
-			)
+		mapM_ (uncurry $ locatedForceEntity world entity) =<< mapM (\(Thruster pr f o)->(\p->(p*^f,o)) <$> readIORef pr) thrusters
+		----forceEntity world entity =<< foldl' (+) (V3 0 0 0)
+		----	<$> (sequence
+		----		$ (\(Thruster powerRef effect _)->(*^ effect) <$> readIORef powerRef)
+		----		<$> thrusters
+		----	)
+		----sequence_ =<< fmap (angularForceEntity world entity)
+		----	<$> (sequence
+		----		$ (\(Thruster powerRef _ a)->(\p->p*^a) <$> readIORef powerRef)
+		----		<$> thrusters
+		----	)
 		forkIO $ forever $ do
 			command <- getLine
 			atomically $ writeTChan commandChan command
