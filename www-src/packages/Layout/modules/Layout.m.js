@@ -115,23 +115,24 @@ function hackEV3DView(hackEVPort) {
 	////camera.position.x = -2*8;
 	////camera.rotation.y = 0.8;
 
-	////var camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
-	////camera.position.z = 2*8;
+	var camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+	camera.position.z = 2*8;
 	////camera.position.y = 2*8;
 	////camera.position.x = 0.5*8;
 	////camera.rotation.x = -0.8;
-	var camera = new THREE.OrthographicCamera(-12,12,8,-8, 0.1, 1000);
-	camera.position.z = 2*8;
+	////var camera = new THREE.OrthographicCamera(-12,12,8,-8, 0.1, 1000);
+	////camera.position.z = 2*8;
 	
 	
 	////var axesHelper = new THREE.AxesHelper( 5 );
 	////scene.add( axesHelper );
 	
-	var directionalLight = new THREE.DirectionalLight( 0xff0000, 0.5 );
-	directionalLight.position.set(5,3,10);
-	scene.add( directionalLight );
-	var pointLight = new THREE.PointLight( 0x00ff00, 0.25, 100 );
-	pointLight.position.set(-5,-3,-10);
+	////var directionalLight = new THREE.DirectionalLight( 0xff0000, 0.5 );
+	////directionalLight.position.set(5,3,10);
+	////scene.add( directionalLight );
+	scene.add(new THREE.AmbientLight(0x222222));
+	var pointLight = new THREE.PointLight(0xaaffaa, 0.25, 10000);
+	pointLight.position.set(-500,-300,-1000);
 	scene.add( pointLight );
 	
 	var shipTemplate;
