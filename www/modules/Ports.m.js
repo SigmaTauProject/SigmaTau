@@ -19,7 +19,6 @@ class Wire extends Port {
 		this.value = cell(0).caching();
 	}
 	set(newValue) {
-		console.log(this.id,newValue);
 		this.value.change(newValue);
 		
 		{
@@ -44,7 +43,6 @@ class Wire extends Port {
 		}
 	}
 	adjust(amount) {
-		console.log(this.id,amount);
 		this.value.change(this.value.grab()+amount);
 		
 		{

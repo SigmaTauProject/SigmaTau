@@ -111,12 +111,10 @@ newShip world networkConnection = do
 									Union (Wire.UpMsgContentSet wireSet) -> do
 										value <- unnetworkFloat <$> Wire.setValue wireSet
 										return $ do
-											print value
 											sequence_ $ writeIORef <$> (thrusterPower <$> thrusters !? fromIntegral (assumeWirePortID-1)) <*> pure ((min 1 . max (-1)) value)
 									Union (Wire.UpMsgContentAdjust wireAdjust) -> do
 										value <- unnetworkFloat <$> Wire.adjustValue wireAdjust
 										return $ do
-											print value
 											sequence_ $ modifyIORef' <$> (thrusterPower <$> thrusters !? fromIntegral (assumeWirePortID-1)) <*> pure (\tv->(min 1 . max (-1)) (tv + value))
 							_ -> return $ return ()
 					)

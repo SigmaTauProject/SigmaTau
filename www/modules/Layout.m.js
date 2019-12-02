@@ -49,7 +49,6 @@ function manualKeyboard(wirePorts) {
 		});
 		setInterval(()=>{
 			keys.chunk(2).forEach(([pk,mk], thrusterID)=>{
-				console.log((+!!keysdown[pk] + -!!keysdown[mk])/4);
 				if (!!keysdown[pk] == !!keysdown[mk])
 					wirePorts[thrusterID].set(0);
 				else
