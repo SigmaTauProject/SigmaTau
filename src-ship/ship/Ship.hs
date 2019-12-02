@@ -38,7 +38,7 @@ type NetworkConnection = (TChan (Lifetime Connection))
 
 data Thruster = Thruster	{ thrusterPower :: IORef Float
 	, thrusterEffect :: V3 Float
-	, thrusterOffset :: Point V3 Float
+	, thrusterAngularEffect :: V3 Float
 	}
 
 makeThruster effect angularEffect = Thruster <$> newIORef 0 <*> pure effect <*> pure angularEffect
@@ -51,7 +51,13 @@ newShip world networkConnection = do
 	----angularZForceEntity world entity 0.8
 	----angularYForceEntity world entity 0.0
 	
-	thrusters <- sequence $ [makeThruster (V3 1 0 0) (P$V3 0 0 0), makeThruster (V3 1 0 0) (P$V3 0 0.1 0)]
+	thrusters <- sequence $	[ makeThruster (V3 0.5 0 0) (V3 0 0 0)
+		, makeThruster (V3 0 0.5 0) (V3 0 0 0)
+		, makeThruster (V3 0 0 0.5) (V3 0 0 0)
+		, makeThruster (V3 0 0 0) (V3 0.05 0 0)
+		, makeThruster (V3 0 0 0) (V3 0 0.05 0)
+		, makeThruster (V3 0 0 0) (V3 0 0 0.05)
+		]
 	
 	commandChan <- atomically newTChan
 	
@@ -68,14 +74,15 @@ newShip world networkConnection = do
 							$ Bridge.addPorts
 							$ Just $ FB.fromList'
 							$ map Bridge.fromPortType
-							$ (take 2 $ repeat $ Bridge.PortTypeWire)
+							$ []
+							++ (take 6 $ repeat $ Bridge.PortTypeWire)
 							++ [Bridge.PortTypeRadarArc]
 							++ [Bridge.PortTypeHackEV]
 					)
 			)
 		
 		rawEntities <- mapEntities world (\e->(,) <$> getEntityPos world entity e <*> getEntityOri world entity e)
-		let entitiesMsg	= append (runPutLazy $ putWord32le 4)
+		let entitiesMsg	= append (runPutLazy $ putWord32le 8)
 			$ encode
 			$ HackEV.downMsg
 			$ HackEV.downMsgContentUpdate $ HackEV.update
@@ -86,7 +93,7 @@ newShip world networkConnection = do
 					(Just $ 0)
 				)
 			$ rawEntities
-		let radarMsg	= append (runPutLazy $ putWord32le 3)
+		let radarMsg	= append (runPutLazy $ putWord32le 7)
 			$ encode
 			$ RadarArc.downMsg
 			$ RadarArc.downMsgContentUpdate $ RadarArc.update
@@ -98,48 +105,35 @@ newShip world networkConnection = do
 						portID <- runGetLazy getWord32le wholeMsg
 						let msg = BS.drop 4 wholeMsg
 						case portID of
-							1 -> do
+							assumeWirePortID -> do
 								content <- Wire.upMsgContent =<< decode msg
 								case content of
 									Union (Wire.UpMsgContentSet wireSet) -> do
 										value <- unnetworkFloat <$> Wire.setValue wireSet
 										return $ do
 											print value
-											sequence_ $ writeIORef <$> (thrusterPower <$> thrusters !? 0) <*> pure value
+											sequence_ $ writeIORef <$> (thrusterPower <$> thrusters !? fromIntegral (assumeWirePortID-1)) <*> pure ((min 1 . max (-1)) value)
 									Union (Wire.UpMsgContentAdjust wireAdjust) -> do
 										value <- unnetworkFloat <$> Wire.adjustValue wireAdjust
 										return $ do
 											print value
-											sequence_ $ modifyIORef' <$> (thrusterPower <$> thrusters !? 0) <*> pure (\tv->tv + value)
-							2 -> do
-								content <- Wire.upMsgContent =<< decode msg
-								case content of
-									Union (Wire.UpMsgContentSet wireSet) -> do
-										value <- unnetworkFloat <$> Wire.setValue wireSet
-										return $ do
-											print value
-											sequence_ $ writeIORef <$> (thrusterPower <$> thrusters !? 1) <*> pure value
-									Union (Wire.UpMsgContentAdjust wireAdjust) -> do
-										value <- unnetworkFloat <$> Wire.adjustValue wireAdjust
-										return $ do
-											print value
-											sequence_ $ modifyIORef' <$> (thrusterPower <$> thrusters !? 1) <*> pure (\tv->tv + value)
+											sequence_ $ modifyIORef' <$> (thrusterPower <$> thrusters !? fromIntegral (assumeWirePortID-1)) <*> pure (\tv->(min 1 . max (-1)) (tv + value))
 							_ -> return $ return ()
 					)
 				atomically $ writeTChan downMsgChan $ DownMsg entitiesMsg
 				atomically $ writeTChan downMsgChan $ DownMsg radarMsg
 			)
-		mapM_ (uncurry $ locatedForceEntity world entity) =<< mapM (\(Thruster pr f o)->(\p->(p*^f,o)) <$> readIORef pr) thrusters
-		----forceEntity world entity =<< foldl' (+) (V3 0 0 0)
-		----	<$> (sequence
-		----		$ (\(Thruster powerRef effect _)->(*^ effect) <$> readIORef powerRef)
-		----		<$> thrusters
-		----	)
-		----sequence_ =<< fmap (angularForceEntity world entity)
-		----	<$> (sequence
-		----		$ (\(Thruster powerRef _ a)->(\p->p*^a) <$> readIORef powerRef)
-		----		<$> thrusters
-		----	)
+		
+		forceEntity world entity =<< foldl' (+) (V3 0 0 0)
+			<$> (sequence
+				$ (\(Thruster powerRef effect _)->(*^ effect) <$> readIORef powerRef)
+				<$> thrusters
+			)
+		sequence_ =<< fmap (angularForceEntity world entity)
+			<$> (sequence
+				$ (\(Thruster powerRef _ a)->(\p->p*^a) <$> readIORef powerRef)
+				<$> thrusters
+			)
 		forkIO $ forever $ do
 			command <- getLine
 			atomically $ writeTChan commandChan command
