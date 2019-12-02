@@ -32,8 +32,6 @@ runTerminal upMsgChan downMsgChan connection = do
 	forkIO $ do
 		forever $ do
 			dataMsg <- receiveDataMessage connection
-			putStr "recieved: "
-			print dataMsg
 			case dataMsg of
 				(Binary d) -> atomically . writeTChan upMsgChan $ UpMsg d
 				(Text _ _) -> return ()

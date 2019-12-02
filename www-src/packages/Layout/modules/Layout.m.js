@@ -25,10 +25,38 @@ function makeLayout(bridge) {
 			...ports	.filter(p=>p.type=="wire")
 				.map(p=>slider(p,{min:"0"})),
 		].forEach(c=>el.appendChild(c));
+		manualKeyboard(ports.filter(p=>p.type=="wire"));//Unsafe as it does not get unmade
 	});
 	return el;
 }
 
+
+function manualKeyboard(wirePorts) {
+	if(wirePorts.length==6) {
+		const keys = "nhrwe,scyimt".split("");
+		let keysdown = {};
+		window.addEventListener("keydown",(e)=>{
+			keys.forEach(c=>{
+				if ( (c=="," && e.code=="Comma") || (c!="," && e.code == "Key"+c.toUpperCase()))
+					keysdown[c] = true;
+			});
+		});
+		window.addEventListener("keyup",(e)=>{
+			keys.forEach(c=>{
+				if ( (c=="," && e.code=="Comma") || (c!="," && e.code == "Key"+c.toUpperCase()))
+					keysdown[c] = false;
+			});
+		});
+		setInterval(()=>{
+			keys.chunk(2).forEach(([pk,mk], thrusterID)=>{
+				if (!!keysdown[pk] == !!keysdown[mk])
+					wirePorts[thrusterID].set(0);
+				else
+					wirePorts[thrusterID].adjust((+!!keysdown[pk] + -!!keysdown[mk])/10);
+			});
+		},100);
+	}
+}
 
 
 function slider(wirePort, config={}) {
@@ -116,8 +144,8 @@ function hackEV3DView(hackEVPort) {
 	////camera.rotation.y = 0.8;
 
 	var camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
-	camera.position.z = 2*8;
-	////camera.position.y = 2*8;
+	camera.position.z = 2;
+	camera.position.y = 1;
 	////camera.position.x = 0.5*8;
 	////camera.rotation.x = -0.8;
 	////var camera = new THREE.OrthographicCamera(-12,12,8,-8, 0.1, 1000);
