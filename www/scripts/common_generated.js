@@ -104,28 +104,28 @@ Msg.Common.Quaternion.prototype.__init = function(i, bb) {
  * @returns {number}
  */
 Msg.Common.Quaternion.prototype.a = function() {
-  return this.bb.readInt8(this.bb_pos);
+  return this.bb.readInt16(this.bb_pos);
 };
 
 /**
  * @returns {number}
  */
 Msg.Common.Quaternion.prototype.b = function() {
-  return this.bb.readInt8(this.bb_pos + 1);
+  return this.bb.readInt16(this.bb_pos + 2);
 };
 
 /**
  * @returns {number}
  */
 Msg.Common.Quaternion.prototype.c = function() {
-  return this.bb.readInt8(this.bb_pos + 2);
+  return this.bb.readInt16(this.bb_pos + 4);
 };
 
 /**
  * @returns {number}
  */
 Msg.Common.Quaternion.prototype.d = function() {
-  return this.bb.readInt8(this.bb_pos + 3);
+  return this.bb.readInt16(this.bb_pos + 6);
 };
 
 /**
@@ -137,11 +137,11 @@ Msg.Common.Quaternion.prototype.d = function() {
  * @returns {flatbuffers.Offset}
  */
 Msg.Common.Quaternion.createQuaternion = function(builder, a, b, c, d) {
-  builder.prep(1, 4);
-  builder.writeInt8(d);
-  builder.writeInt8(c);
-  builder.writeInt8(b);
-  builder.writeInt8(a);
+  builder.prep(2, 8);
+  builder.writeInt16(d);
+  builder.writeInt16(c);
+  builder.writeInt16(b);
+  builder.writeInt16(a);
   return builder.offset();
 };
 

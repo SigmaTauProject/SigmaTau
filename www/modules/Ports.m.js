@@ -108,7 +108,7 @@ class HackEV extends Port { // Hack Entity View
 							, entity.ori().b()
 							, entity.ori().c()
 							, entity.ori().d()
-							].map(v=>unnetworkFloat(v,8,true))
+							].map(v=>unnetworkFloat(v,16,true))
 					, meshID	:entity.mesh()
 					});
 			}

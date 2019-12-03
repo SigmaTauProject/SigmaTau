@@ -7,9 +7,9 @@ struct Vec3 {
 	z:float;
 }
 struct Quaternion {
-	a:int8;
-	b:int8;
-	c:int8;
-	d:int8;
+	a:int16;
+	b:int16;
+	c:int16;
+	d:int16;
 }
 
