@@ -42,14 +42,16 @@ function manualKeyboard(wirePorts) {
 			});
 		});
 		window.addEventListener("keyup",(e)=>{
-			keys.forEach(c=>{
-				if ( (c=="," && e.code=="Comma") || (c!="," && e.code == "Key"+c.toUpperCase()))
+			keys.forEach((c,cid)=>{
+				if ( (c=="," && e.code=="Comma") || (c!="," && e.code == "Key"+c.toUpperCase())) {
 					keysdown[c] = false;
+					wirePorts[Math.floor(cid/2)].set(0);
+				}
 			});
 		});
 		setInterval(()=>{
 			keys.chunk(2).forEach(([pk,mk], thrusterID)=>{
-				if (!!keysdown[pk] == !!keysdown[mk])
+				if (!!keysdown[pk] && !!keysdown[mk])
 					wirePorts[thrusterID].set(0);
 				else
 					wirePorts[thrusterID].adjust((+!!keysdown[pk] + -!!keysdown[mk])/10);
