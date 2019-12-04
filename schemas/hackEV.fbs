@@ -1,0 +1,26 @@
+include "./common.fbs";
+
+namespace Msg.HackEV;
+
+table Entity {
+	pos	:	Msg.Common.Vec3	;
+	ori	:	Msg.Common.Quaternion	;
+	mesh	:	uint16	;
+}
+
+table AddMesh {
+	id	:	uint16	;
+	mesh	:	[float]	;
+}
+table Update {
+	entities	:	[Entity]	;
+}
+
+union DownMsgContent
+{ AddMesh
+, Update
+}
+
+table DownMsg {
+	content	:	DownMsgContent	;
+}

@@ -6,3 +6,5 @@
 **/dist/
 
 **/\.dub/
+
+www-src/package-builders/Msg/build/

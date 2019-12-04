@@ -3,77 +3,124 @@ module World;
 import cst_;
 
 import std.stdio;
+import std.math;
+import core.time;
 import core.memory;
 import std.algorithm;
+import std.range;
 
-enum EntityType {
-	Asteroid	,
-	Station	,
-	Ship	,
-}
+import WorldLogic;
+alias World = WorldLogic.World; // To cover this module (also called `World`).
 
-struct World {
-	Entity*[] entities;
-}
+import math.linear.vector;
+import math.linear.point;
+import math.linear.quaternion;
+import math.linear.axis_rot;
 
-struct Entity {
-	int[3] pos;
-	int[3] vel;
-}
 
-alias EntityRef = uint;
+alias Entity = uint;
 
-extern(C) export
-World* newWorld() {
-	writeln("World Created");
-	World* world = new World();
-	GC.addRoot(world);
-	return world;
-}
-extern(C) export
-void destroyWorld(World* world) {
-	writeln("World Destroyed");
-	GC.removeRoot(world);
-}
-
-extern(C) export
-void updateWorld(World* world) {
-	writeln("World Updated");
-	foreach (i,e; world.entities) {
-		e.pos[] += e.vel[];
+extern(C) export {
+	World* newWorld() {
+		writeln("World Created");
+		World* world = WorldLogic.newWorld(MonoTime.currTime());
+		GC.addRoot(world);
+		return world;
+	}
+	void destroyWorld(World* world) {
+		writeln("World Destroyed");
+		GC.removeRoot(world);
+	}
+	void updateWorld(World* world) {
+		WorldLogic.forwardWorld(world, MonoTime.currTime());
+	}
+	
+	
+	Entity newEntity(World* world, EntityType type, int x, int y, int z) {
+		return WorldLogic.createEntity(world, type, point(vec!long(x,y,z)*pow(2,16))).cst!Entity;
+	}
+	void locatedForceEntity(World* world, Entity er, float fx, float fy, float fz, float px, float py, float pz) {
+		withEntity(world,er,(ea){
+			auto force = vec!float(fx,fy,fz) * WorldLogic.getEntityOri(world, ea);
+			auto point = vec!float(px,py,pz) * WorldLogic.getEntityOri(world, ea);
+			WorldLogic.forceEntity(world,ea, (force*(pow(2f,16f)/1000f)).vecCast!int);
+			WorldLogic.angularForceEntity(world,ea, cross(point,force));
+		});
+	}
+	void moveEntity(World* world, Entity er, float x, float y, float z) {
+		//TODO: Update this to use floats and relative ori
+		withEntity(world,er,(ea){
+			WorldLogic.moveEntity(world,ea, (WorldLogic.getEntityOri(world, ea) * vec!float(x,y,z)*pow(2,16)).vecCast!long);
+		});
+	}
+	void forceEntity(World* world, Entity er, float x, float y, float z) {
+		withEntity(world,er,(ea){
+			auto force = vec!float(x,y,z) * WorldLogic.getEntityOri(world, ea);
+			WorldLogic.forceEntity(world,ea, (force*(pow(2f,16f)/1000f)).vecCast!int);
+		});
+	}
+	void rotateEntity(World* world, Entity er, float w, float x, float y, float z) {
+		withEntity(world,er,(ea){
+			////WorldLogic.rotateEntity(world,ea, Quat!float(w,vec!float(x,y,z) * WorldLogic.getEntityOri(world, ea).inverse).normalized);
+			////WorldLogic.rotateEntity(world,ea, WorldLogic.getEntityOri(world, ea).inverse * Quat!float(w,[x,y,z]));
+			Quat!float rot = Quat!float(w,vec!float(x,y,z));
+			rot.axis = rot.axis * WorldLogic.getEntityOri(world, ea);
+			WorldLogic.rotateEntity(world,ea, rot);
+		});
+	}
+	void angularForceEntity(World* world, Entity er, float x, float y, float z) {
+		withEntity(world,er,(ea){
+			WorldLogic.angularForceEntity(world,ea, Vec3!float(x,y,z)*WorldLogic.getEntityOri(world, ea));
+		});
+	}
+	void angularEulerForceEntity(World* world, Entity er, float yaw, float pitch, float roll) {
+		//TODO: Implement this.
+		////withEntity(world,er,(ea){
+		////	WorldLogic.angularForceEntity(world,ea,arotf.euler_rotation(yaw, pitch, roll));
+		////});
+	}
+	
+	float[3]* getEntityPos(World* world, Entity rer, Entity er) {
+		// TODO: Fix this, deadlocking is theoretically possable.  Should not hold a mutex while reaching for another.
+		return withEntity(world,rer,(rea)=>withEntity(world,er,(ea){
+			return [(	WorldLogic.getEntityOri(world,rea).inverse
+				*
+				(	(	(	WorldLogic.getEntityPos(world,ea)
+							-
+							WorldLogic.getEntityPos(world,rea)
+						)
+					).vecCast!float
+					/
+					pow(2f,16f)
+				)
+			).ffiVec].ptr;
+		}));
+	}
+	float[4]* getEntityOri(World* world, Entity rer, Entity er) {
+		// TODO: Fix this, deadlocking is theoretically possable.  Should not hold a mutex while reaching for another.
+		return withEntity(world,rer,(rea)=>withEntity(world,er,(ea){
+			return [(	WorldLogic.getEntityOri(world,rea).inverse
+				*
+				WorldLogic.getEntityOri(world,ea)
+			).ffiQuat].ptr;
+		}));
+	}
+	
+	// TODO: Optimise this.
+	void doEntities(World* world, void function(Entity) callback) {
+		// TODO: Remove use of private access to content of world.
+		// TODO: (As in the last todo, this is considered illegal access for this file (thus this kind of unsafe should not be possable)) Fix this, it is still unsafe, as `world.entities` is not mutex locked.
+		foreach (Entity er; 0..(world.entities.length.cst!Entity)) {
+			callback(er);
+		}
 	}
 }
 
 
-extern(C) export
-EntityRef newEntity(World* world, int x, int y, int z) {
-	writeln("New Entity: ",x," ",y," ",z);
-	world.entities ~= new Entity([x,y,z]);
-	return world.entities.length.cst!uint - 1;
-}
-extern(C) export
-void moveEntity(World* world, EntityRef er, int x, int y, int z) {
-	world.entities[er].pos[] += [x,y,z];
-	writeln("Move Entity: ",world.entities[er].pos);
-}
-extern(C) export
-void forceEntity(World* world, EntityRef er, int x, int y, int z) {
-	world.entities[er].vel[] += [x,y,z];
-	writeln("Force Entity: ",world.entities[er].vel);
-}
-
-extern(C) export
-int[3]* getEntityPos(World* world, EntityRef rer, EntityRef er) {
-	int[3]* relPos = (new int[3]).ptr.cst!(int[3]*);
-	(*relPos)[] = world.entities[er].pos[] - world.entities[rer].pos[];
-	return relPos;
-}
-
-extern(C) export
-void doEntities(World* world, void function(EntityRef) callback) {
-	foreach (EntityRef i, e; world.entities) {
-		callback(i);
-	}
+unittest {
+	auto world = newWorld();
+	newEntity(world, EntityType.Ship, 0, 0, 0);
+	updateWorld(world);
 }
 
 

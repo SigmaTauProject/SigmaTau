@@ -1,0 +1,15 @@
+namespace Msg.Common;
+
+
+struct Vec3 {
+	x:float;
+	y:float;
+	z:float;
+}
+struct Quaternion {
+	a:int16;
+	b:int16;
+	c:int16;
+	d:int16;
+}
+

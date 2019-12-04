@@ -1,9 +1,11 @@
 module Network.TerminalConnection where
 
+import Data.ByteString.Lazy
 import Control.Concurrent.STM.TChan
 
-import Data.Msg.Up (Table, UpMsg)
+newtype UpMsg = UpMsg ByteString
+newtype DownMsg = DownMsg ByteString
 
-data Connection = Connection (TChan (Table UpMsg))
+data Connection = Connection (TChan UpMsg) (TChan DownMsg)
 
 

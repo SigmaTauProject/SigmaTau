@@ -14,6 +14,14 @@ dependencies:
 
 internal-libraries:
   #---General
+  druntime:
+    source-dirs: src-general/druntime
+    exposed-modules:
+      - DRuntime
+    dependencies: []
+    extra-libraries:
+      - druntime
+      - phobos2
   lifetime:
     source-dirs: src-general/lifetime
     exposed-modules:
@@ -32,11 +40,15 @@ internal-libraries:
       - Network.TerminalConnection
     dependencies:
       - stm
-      - msg
+      - bytestring
   msg:
     source-dirs: src-network/msg
     exposed-modules:
-      - Data.Msg.Up
+      - Data.Msg.Common
+      - Data.Msg.Bridge
+      - Data.Msg.Wire
+      - Data.Msg.RadarArc
+      - Data.Msg.HackEV
     dependencies:
       - flatbuffers
   terminal-web-server:
@@ -55,8 +67,6 @@ internal-libraries:
       - stm
       
       - terminal-connection
-      - flatbuffers
-      - msg
       - lifetime
   #---World
   world:
@@ -68,8 +78,6 @@ internal-libraries:
       - vector
     extra-lib-dirs: []
     extra-libraries:
-      - druntime
-      - phobos2
       - sigmatauworld
   #---Ship
   ship:
@@ -81,22 +89,23 @@ internal-libraries:
       - lifetime-set
       - terminal-connection
       - flatbuffers
+      - cereal
       - msg
       - world
       - stm
       - linear
+      - bytestring
     
 
 executable:
   main: Main.hs
   source-dirs: src/main
   dependencies:
+    - druntime
     - world
     - ship
     - stm
     - linear
     - lifetime
     - terminal-connection
-    - flatbuffers
-    - msg
     - terminal-web-server

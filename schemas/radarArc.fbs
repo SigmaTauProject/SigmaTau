@@ -1,0 +1,15 @@
+include "./common.fbs";
+
+namespace Msg.RadarArc;
+
+table Update {
+	pings	:	[Msg.Common.Vec3]	;
+}
+
+union DownMsgContent
+{ Update
+}
+
+table DownMsg {
+	content	:	DownMsgContent	;
+}

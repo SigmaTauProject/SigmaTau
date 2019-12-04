@@ -1,0 +1,8 @@
+[submodule "www-src/packages/Div"]
+	path = www-src/packages/Div
+	url = https://JonathanILevi@bitbucket.org/JonathanILevi/div.git
+[submodule "world-src/gl3n"]
+	url = https://github.com/JonathanILevi/gl3n.git
+[submodule "www-src/packages/FRP.js"]
+	path = www-src/packages/FRP.js
+	url = https://github.com/JonathanILevi/FRP.js.git

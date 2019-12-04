@@ -5,6 +5,7 @@ module Network.Terminal (runTerminal) where
 import Control.Monad (void, forever)
 
 import Control.Concurrent (forkIO)
+import Control.Concurrent (threadDelay)
 import Control.Concurrent.Chan
 import Control.Concurrent.STM (atomically)
 import Control.Concurrent.STM.TChan
@@ -17,31 +18,29 @@ import Network.WebSockets
 
 import Data.ByteString.Lazy (fromStrict, toStrict)
 
-import FlatBuffers
-import Data.Msg.Up
+import Network.TerminalConnection hiding (Connection)
 import qualified Network.TerminalConnection as Terminal (Connection(Connection))
 import Data.Lifetime
 
-runTerminal :: Connection -> IO (Lifetime Terminal.Connection)
-runTerminal connection = do
+runTerminal :: TChan UpMsg -> TChan DownMsg -> Connection -> IO ()
+runTerminal upMsgChan downMsgChan connection = do
 	putStrLn "New Connection"
 	----sendChannel <- newChan
 	----let sendPush = newPush (\m->print m>>writeChan sendChannel m)
 	----FRP.send upMsgPush $ (sendPush, makeMsgLacking $ UpMsg (ComponentID 0) (BridgeUpMsg MBU.Connect))
 	--reading thread
-	upMsgChan <- atomically newTChan
 	forkIO $ do
 		forever $ do
 			dataMsg <- receiveDataMessage connection
-			putStr "recieved: "
-			print dataMsg
 			case dataMsg of
-				(Binary d) -> sequence_ $ atomically . writeTChan upMsgChan <$> decode d
+				(Binary d) -> atomically . writeTChan upMsgChan $ UpMsg d
 				(Text _ _) -> return ()
-	let con = Terminal.Connection upMsgChan
-	return $ Lifetime (return $ Just $ con)
+	----let con = Terminal.Connection upMsgChan
+	----return $ Lifetime (return $ Just $ con)
 	--writing thread
-	forever (return ())
+	forever $ do
+		(DownMsg msgData) <- atomically $ readTChan downMsgChan
+		sendDataMessage connection $ Binary msgData
 	----sequence_ =<< fmap (sendDataMessage connection . Binary . fromStrict . serializeDownMsg) <$> getChanContents sendChannel
 
 
