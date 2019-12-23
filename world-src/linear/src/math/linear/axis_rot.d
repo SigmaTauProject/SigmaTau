@@ -3,7 +3,6 @@ module math.linear.axis_rot;
 import std.math;
 
 import math.linear.vector;
-alias normalized = math.linear.vector.normalized;
 
 public import math.linear._qa;
 

@@ -4,7 +4,7 @@ authors "Jonathan Levi"
 copyright "Copyright © 2018, Jonathan Levi"
 license "CC0"
 
-target	"library"
+target	"staticLibrary"
 targetPath	"build"
 
 dependency "cst"	version="~>1.0"
