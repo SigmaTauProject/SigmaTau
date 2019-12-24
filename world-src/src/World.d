@@ -20,16 +20,23 @@ import math.linear.axis_rot;
 
 alias Entity = uint;
 
+private pragma(inline)
+T* returnPtr(T)(T* ptr) {
+	holdPtr(ptr);
+	return ptr;
+}
 extern(C) export {
+	void holdPtr(void* ptr) {
+		GC.addRoot(ptr);
+		GC.setAttr(ptr, GC.BlkAttr.NO_MOVE);
+	}
+	void releasePtr(void* ptr) {
+		GC.removeRoot(ptr);
+		GC.clrAttr(ptr, GC.BlkAttr.NO_MOVE);
+	}
 	World* newWorld() {
 		writeln("World Created");
-		World* world = WorldLogic.newWorld(MonoTime.currTime());
-		GC.addRoot(world);
-		return world;
-	}
-	void destroyWorld(World* world) {
-		writeln("World Destroyed");
-		GC.removeRoot(world);
+		return returnPtr(WorldLogic.newWorld(MonoTime.currTime()));
 	}
 	void updateWorld(World* world) {
 		WorldLogic.forwardWorld(world, MonoTime.currTime());
@@ -94,7 +101,7 @@ extern(C) export {
 					pow(2f,16f)
 				)
 			).ffiVec].ptr;
-		}));
+		})).returnPtr;
 	}
 	float[4]* getEntityOri(World* world, Entity rer, Entity er) {
 		// TODO: Fix this, deadlocking is theoretically possable.  Should not hold a mutex while reaching for another.
@@ -103,8 +110,9 @@ extern(C) export {
 				*
 				WorldLogic.getEntityOri(world,ea)
 			).ffiQuat].ptr;
-		}));
+		})).returnPtr;
 	}
+	
 	
 	// TODO: Optimise this.
 	void doEntities(World* world, void function(Entity) callback) {
@@ -121,6 +129,19 @@ unittest {
 	auto world = newWorld();
 	newEntity(world, EntityType.Ship, 0, 0, 0);
 	updateWorld(world);
+}
+
+unittest {
+	//	Ensure that the array representation is as expected for use in FFI.
+	struct MArray {
+		size_t length;
+		int* ptr;
+	}
+	int[] a = [3,5];
+	MArray am = *cast(MArray*) &a;
+	assert(am.length == 2);
+	assert(*am.ptr == 3);
+	assert(*(am.ptr+1) == 5);
 }
 
 
