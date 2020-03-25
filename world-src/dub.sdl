@@ -7,6 +7,8 @@ license "MIT"
 target	"staticLibrary"
 targetPath	"build"
 
+libs "fcl"
+
 dependency "cst"	version="~>1.0"
 dependency "linear"	path="linear"
 ////dependency "gl3n"	path="gl3n"
