@@ -1,6 +1,7 @@
 { nixpkgs ? import <nixpkgs> {}, compiler ? "default", doBenchmark ? false }:
 
 let
+	fcl = import(./world-src/fcl.nix);
 	inherit (nixpkgs) pkgs;
 	f =	{ mkDerivation, base, bytestring, flatbuffers
 		, hpack, http-types, linear, stdenv, stm
@@ -19,7 +20,7 @@ let
 			wai-app-static wai-websockets warp websockets
 		];
 		librarySystemDepends = [ ];
-		libraryToolDepends = [ hpack dmd dub binutils cabal-install ];
+		libraryToolDepends = [ hpack cabal-install binutils dmd dub fcl ];
 		executableHaskellDepends = [ base flatbuffers linear stm ];
 		doHaddock = false;
 		prePatch = "hpack";
